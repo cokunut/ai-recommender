@@ -22,7 +22,7 @@ export default async function ProfilePage({ searchParams }: { searchParams?: { i
         <p className="mb-4 text-sm text-rose-700/80">
           Tell us what you enjoy reading and list a few books you loved.
         </p>
-        <ProfileForm />
+        <ProfileForm initialText={profile?.profileText ?? ""} />
       </section>
 
       <section className="cute-card">
