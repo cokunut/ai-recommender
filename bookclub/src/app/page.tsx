@@ -18,9 +18,14 @@ export default async function Home() {
         {session?.user ? (
           <div className="flex flex-col items-center gap-3">
             <p className="text-rose-700/80">Signed in as {session.user.name ?? "you"}.</p>
-            <Link href="/clubs" className="cute-button">
-              Go to your clubs
-            </Link>
+            <div className="flex gap-3">
+              <Link href="/clubs" className="cute-button">
+                Go to your clubs
+              </Link>
+              <Link href="/profile" className="cute-button-outline">
+                Your profile
+              </Link>
+            </div>
             <form
               action={async () => {
                 "use server";
