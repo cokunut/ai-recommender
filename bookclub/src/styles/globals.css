@@ -4,3 +4,26 @@
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
+
+@layer base {
+  body {
+    /* Soft, cute vibe with readable contrast */
+    @apply antialiased;
+  }
+
+  a {
+    @apply underline decoration-rose-300 underline-offset-4 transition-colors hover:decoration-rose-400;
+  }
+}
+
+@layer utilities {
+  .cute-card {
+    @apply rounded-3xl bg-white/80 p-6 shadow-[0_8px_30px_rgb(0,0,0,0.06)] backdrop-blur;
+  }
+  .cute-button {
+    @apply inline-flex items-center justify-center rounded-full bg-gradient-to-r from-rose-400 to-fuchsia-400 px-6 py-3 font-medium text-white shadow-md transition hover:from-rose-500 hover:to-fuchsia-500 active:scale-[0.99];
+  }
+  .cute-button-outline {
+    @apply inline-flex items-center justify-center rounded-full border border-rose-300 bg-white/70 px-4 py-2 text-rose-700 shadow-sm transition hover:bg-white;
+  }
+}
