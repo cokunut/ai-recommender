@@ -60,9 +60,10 @@ model User {
     name          String?
     email         String?   @unique
     emailVerified DateTime?
-    image         String?
-    avatarUrl     String?
-    createdAt     DateTime  @default(now())
+  image         String?
+  avatarUrl     String?
+  profileText   String?
+  createdAt     DateTime  @default(now())
     accounts      Account[]
     sessions      Session[]
     posts         Post[]

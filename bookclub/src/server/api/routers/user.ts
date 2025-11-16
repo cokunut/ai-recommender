@@ -26,6 +26,7 @@ export const userRouter = createTRPCRouter({
         name: true,
         image: true,
         avatarUrl: true,
+        profileText: true,
         goodreadsImports: {
           orderBy: { createdAt: "desc" },
           take: 1,
@@ -36,10 +37,15 @@ export const userRouter = createTRPCRouter({
     return user;
   }),
 
-  // No-op to keep API surface if needed by clients; does not persist.
   updateProfile: publicProcedure
     .input(z.object({ profileText: z.string().max(5000).optional() }))
-    .mutation(async () => {
-      return { ok: true } as const;
+    .mutation(async ({ ctx, input }) => {
+      const userId = await getOrCreateCurrentUserId(ctx);
+      const updated = await ctx.db.user.update({
+        where: { id: userId },
+        data: { profileText: input.profileText ?? null },
+        select: { id: true, profileText: true },
+      });
+      return updated;
     }),
 });

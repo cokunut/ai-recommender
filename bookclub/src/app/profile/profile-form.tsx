@@ -1,34 +1,35 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { api } from "~/trpc/react";
 
-const KEY = "profile:text";
-
-export function ProfileForm() {
-  const [text, setText] = useState("");
-  const [saved, setSaved] = useState<null | "ok" | "error" | "saving">(null);
+export function ProfileForm({ initialText }: { initialText?: string | null }) {
+  const [text, setText] = useState(initialText ?? "");
+  const [saved, setSaved] = useState<null | "ok" | "error">(null);
 
   useEffect(() => {
-    try {
-      const existing = localStorage.getItem(KEY);
-      if (existing) setText(existing);
-    } catch {}
-  }, []);
+    setText(initialText ?? "");
+  }, [initialText]);
 
-  function onSave(e: React.FormEvent) {
-    e.preventDefault();
-    setSaved("saving");
-    try {
-      localStorage.setItem(KEY, text);
+  const utils = api.useUtils();
+  const mutate = api.user.updateProfile.useMutation({
+    onSuccess: async () => {
       setSaved("ok");
+      await utils.user.getProfile.invalidate();
       setTimeout(() => setSaved(null), 1500);
-    } catch {
-      setSaved("error");
-    }
-  }
+    },
+    onError: () => setSaved("error"),
+  });
 
   return (
-    <form onSubmit={onSave} className="space-y-3">
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        setSaved(null);
+        mutate.mutate({ profileText: text });
+      }}
+      className="space-y-3"
+    >
       <textarea
         name="profileText"
         value={text}
@@ -38,8 +39,8 @@ export function ProfileForm() {
         className="w-full rounded-md border border-rose-200 bg-white/60 p-3 text-rose-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-300"
       />
       <div className="flex items-center gap-3">
-        <button type="submit" className="cute-button" disabled={saved === "saving"}>
-          {saved === "saving" ? "Saving…" : "Save"}
+        <button type="submit" className="cute-button" disabled={mutate.isPending}>
+          {mutate.isPending ? "Saving…" : "Save"}
         </button>
         {saved === "ok" && <span className="text-sm text-emerald-700">Saved</span>}
         {saved === "error" && <span className="text-sm text-rose-700">Failed to save</span>}
@@ -47,4 +48,3 @@ export function ProfileForm() {
     </form>
   );
 }
-
