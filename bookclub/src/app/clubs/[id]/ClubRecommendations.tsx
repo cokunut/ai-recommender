@@ -5,11 +5,14 @@ import { api } from "~/trpc/react";
 
 export function ClubRecommendations({ groupId }: { groupId: string }) {
   const utils = api.useUtils();
-  const { data: poll, isLoading, isFetching } = api.clubs.getActivePoll.useQuery({ id: groupId });
+  const { data: poll } = api.clubs.getActivePoll.useQuery({ id: groupId });
   const gen = api.clubs.generateRecs.useMutation({
     onSuccess: () => utils.clubs.getActivePoll.invalidate({ id: groupId }),
   });
   const voteMut = api.clubs.vote.useMutation({
+    onSuccess: () => utils.clubs.getActivePoll.invalidate({ id: groupId }),
+  });
+  const archiveMut = api.clubs.archivePoll.useMutation({
     onSuccess: () => utils.clubs.getActivePoll.invalidate({ id: groupId }),
   });
 
@@ -22,14 +25,6 @@ export function ClubRecommendations({ groupId }: { groupId: string }) {
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     return `${hours}h ${minutes}m left`;
   }, [poll?.endsAt]);
-
-  if (isLoading || isFetching) {
-    return (
-      <section className="cute-card mt-6">
-        <p className="text-rose-700/80">Loading recommendations…</p>
-      </section>
-    );
-  }
 
   if (!poll) {
     return (
@@ -82,20 +77,9 @@ export function ClubRecommendations({ groupId }: { groupId: string }) {
             const isMine = poll.myVoteChoiceId === choice.id;
             return (
               <div key={choice.id} className="rounded-lg border border-rose-200 p-3">
-                <div className="mb-2 aspect-[3/4] w-full overflow-hidden rounded bg-rose-50">
-                  {book.coverImageUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={book.coverImageUrl}
-                      alt={book.title}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center text-4xl">📚</div>
-                  )}
-                </div>
+                <BookCover title={book.title} author={book.authors} coverUrl={book.coverImageUrl} />
                 <h3 className="mb-1 font-semibold text-rose-900">{book.title}</h3>
-                <p className="mb-3 text-sm text-rose-700/80">Why recommended: A great pick for this club’s vibe. (placeholder)</p>
+                <p className="mb-3 text-sm text-rose-700/80">Why recommended: Tailored to your club’s tastes. (placeholder)</p>
 
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -126,7 +110,7 @@ export function ClubRecommendations({ groupId }: { groupId: string }) {
         <div>
           <h3 className="mb-3 text-lg font-semibold text-rose-900">Winner</h3>
           <div className="flex gap-4">
-            <div className="h-28 w-20 overflow-hidden rounded bg-rose-50">
+            <div className="h-40 w-28 overflow-hidden rounded bg-rose-50">
               {winnerChoice?.book?.coverImageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -142,6 +126,23 @@ export function ClubRecommendations({ groupId }: { groupId: string }) {
               <p className="text-sm font-medium uppercase tracking-wide text-rose-600">Selected Book</p>
               <h4 className="text-xl font-bold text-rose-900">{winnerChoice?.book?.title ?? poll.choices[0]?.book?.title}</h4>
               <p className="text-rose-700/80">Voting has ended. Enjoy your next read!</p>
+              <div className="mt-3">
+                <button
+                  className="cute-button-outline"
+                  disabled={archiveMut.isPending}
+                  onClick={async () => {
+                    const input = window.prompt("Archive this book. Rate it 1-5 (optional):", "");
+                    const score = input ? Number(input) : undefined;
+                    if (score !== undefined && (isNaN(score) || score < 1 || score > 5)) {
+                      alert("Please enter a number between 1 and 5 or leave blank.");
+                      return;
+                    }
+                    await archiveMut.mutateAsync({ pollId: poll.id, score });
+                  }}
+                >
+                  Archive book
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -150,3 +151,24 @@ export function ClubRecommendations({ groupId }: { groupId: string }) {
   );
 }
 
+function BookCover({ title, author, coverUrl }: { title: string; author: string; coverUrl?: string | null }) {
+  // Use first author if multiple are comma-separated
+  const firstAuthor = author.split(",")[0]?.trim() ?? author;
+  const { data } = api.books.getThumbnail.useQuery(
+    { title, author: firstAuthor },
+    { enabled: !coverUrl && Boolean(title) && Boolean(firstAuthor) },
+  );
+
+  const src = coverUrl ?? data?.thumbnail ?? null;
+
+  return (
+    <div className="mb-3 w-full overflow-hidden rounded bg-rose-50" style={{ aspectRatio: "3/4" }}>
+      {src ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={src} alt={title} className="h-full w-full object-cover" />
+      ) : (
+        <div className="flex h-full w-full items-center justify-center text-4xl">📚</div>
+      )}
+    </div>
+  );
+}

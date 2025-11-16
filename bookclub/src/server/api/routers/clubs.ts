@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { TRPCError } from "@trpc/server";
+import { env } from "~/env";
 
 const GOVERNANCE = ["OWNER_ADMIN", "ALL_MEMBERS"] as const;
 
@@ -74,6 +75,28 @@ export const clubsRouter = createTRPCRouter({
       return Boolean(membership);
     }),
 
+  // List members of a club
+  members: publicProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const members = await ctx.db.groupMember.findMany({
+        where: { groupId: input.id },
+        include: { user: true },
+        orderBy: { joinedAt: "asc" },
+      });
+      return members.map((m: any) => ({
+        id: m.id,
+        role: m.role,
+        joinedAt: m.joinedAt,
+        user: {
+          id: m.user.id,
+          name: m.user.name,
+          image: m.user.image,
+          avatarUrl: m.user.avatarUrl,
+        },
+      }));
+    }),
+
   join: publicProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
@@ -91,7 +114,7 @@ export const clubsRouter = createTRPCRouter({
       return membership;
     }),
 
-  // Create or return an active 24h poll with 3 stubbed books
+  // Create or return an active 24h poll with 3 books
   generateRecs: publicProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
@@ -119,48 +142,106 @@ export const clubsRouter = createTRPCRouter({
       });
       if (existing) return existing;
 
-      // Ensure at least 3 books exist; if not, create stub books
-      const bookCount = await ctx.db.book.count();
-      if (bookCount < 3) {
-        const missing = 3 - bookCount;
-        const samples = [
-          {
-            title: "The Great Gatsby",
-            authors: "F. Scott Fitzgerald",
-            coverImageUrl: "https://covers.openlibrary.org/b/id/7222246-M.jpg",
-            description: "A Jazz Age classic about wealth and dreams.",
-          },
-          {
-            title: "Pride and Prejudice",
-            authors: "Jane Austen",
-            coverImageUrl: "https://covers.openlibrary.org/b/id/8091016-M.jpg",
-            description: "A witty romance and social commentary.",
-          },
-          {
-            title: "1984",
-            authors: "George Orwell",
-            coverImageUrl: "https://covers.openlibrary.org/b/id/7222241-M.jpg",
-            description: "A dystopian tale of surveillance and control.",
-          },
-        ];
-        for (let i = 0; i < missing; i++) {
-          const s = samples[i]!;
-          await ctx.db.book.create({
-            data: {
-              title: s.title,
-              authors: s.authors,
-              coverImageUrl: s.coverImageUrl,
-              description: s.description,
-            },
-          });
-        }
-      }
+      // Use the same logic as /test-recommendations to generate 3 recs via Groq
+      let books: Array<{ id: string; title: string; authors: string }> = [];
+      try {
+        if (!env.GROQ_API_KEY) throw new Error("GROQ_API_KEY missing");
 
-      // Pick 3 books (latest 3 is fine for stub)
-      const books = await ctx.db.book.findMany({
-        orderBy: { createdAt: "desc" },
-        take: 3,
-      });
+        const groupData = await ctx.db.group.findUnique({
+          where: { id: input.id },
+          select: { id: true, name: true, description: true },
+        });
+        const memberships = await ctx.db.groupMember.findMany({
+          where: { groupId: input.id },
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                goodreadsImports: {
+                  orderBy: { createdAt: "desc" },
+                  select: { jsonData: true },
+                },
+              },
+            },
+          },
+        });
+
+        const memberDetails = memberships
+          .map((m, idx) => {
+            const hasGR = m.user.goodreadsImports.length > 0;
+            return `${idx + 1}. ${m.user.name ?? "Anonymous"}\n   - ${hasGR ? "Has Goodreads data" : "No Goodreads data"}`;
+          })
+          .join("\n\n");
+
+        const prompt = `You are a book recommendation expert for book clubs. Based on the following information about a book club and its members, recommend exactly 3 books that would be perfect for this group's next reading round.\n\nBook Club Information:\n- Name: ${groupData?.name}\n- Description: ${groupData?.description ?? "No description provided"}\n\nMembers (${memberships.length} total):\n${memberDetails}\n\nPlease recommend exactly 3 books and return ONLY a valid JSON array with objects: {\n  "title": "Book Title",\n  "author": "Author Name"\n}`;
+
+        const groqResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${env.GROQ_API_KEY}`,
+          },
+          body: JSON.stringify({
+            model: "llama-3.3-70b-versatile",
+            messages: [
+              { role: "system", content: "Return valid JSON arrays only." },
+              { role: "user", content: prompt },
+            ],
+            temperature: 0.7,
+            max_tokens: 1200,
+          }),
+        });
+        if (!groqResponse.ok) throw new Error(await groqResponse.text());
+        const groqData = (await groqResponse.json()) as any;
+        const content: string | undefined = groqData.choices?.[0]?.message?.content;
+        if (!content) throw new Error("No content from Groq");
+        let recs: Array<{ title: string; author: string }> = [];
+        try {
+          const parsed = JSON.parse(content);
+          recs = Array.isArray(parsed) ? parsed : parsed.books || parsed.recommendations || [];
+        } catch {
+          const jsonMatch = content.match(/```(?:json)?\s*(\[[\s\S]*\])\s*```/);
+          if (jsonMatch) {
+            recs = JSON.parse(jsonMatch[1]!);
+          } else {
+            throw new Error("Failed to parse Groq JSON");
+          }
+        }
+        if (!Array.isArray(recs) || recs.length < 3) throw new Error("Invalid recs");
+
+        // Upsert or create books by title+author
+        const created: Array<{ id: string; title: string; authors: string }> = [];
+        for (const r of recs.slice(0, 3)) {
+          const title = r.title?.trim();
+          const author = r.author?.trim();
+          if (!title || !author) continue;
+          const existing = await ctx.db.book.findFirst({ where: { title, authors: author } });
+          const book =
+            existing ??
+            (await ctx.db.book.create({ data: { title, authors: author } }));
+          created.push({ id: book.id, title: book.title, authors: book.authors });
+        }
+        if (created.length === 3) {
+          books = created;
+        }
+      } catch (err) {
+        // fallback to fixed stubs if Groq not configured or fails
+        const samples = [
+          { title: "The Great Gatsby", authors: "F. Scott Fitzgerald", coverImageUrl: "https://covers.openlibrary.org/b/id/7222246-M.jpg" },
+          { title: "Pride and Prejudice", authors: "Jane Austen", coverImageUrl: "https://covers.openlibrary.org/b/id/8091016-M.jpg" },
+          { title: "1984", authors: "George Orwell", coverImageUrl: "https://covers.openlibrary.org/b/id/7222241-M.jpg" },
+        ];
+        const created: Array<{ id: string; title: string; authors: string }> = [];
+        for (const s of samples) {
+          const existing = await ctx.db.book.findFirst({ where: { title: s.title, authors: s.authors } });
+          const book =
+            existing ??
+            (await ctx.db.book.create({ data: { title: s.title, authors: s.authors, coverImageUrl: s.coverImageUrl } }));
+          created.push({ id: book.id, title: book.title, authors: book.authors });
+        }
+        books = created;
+      }
 
       const startsAt = now;
       const endsAt = new Date(now.getTime() + 24 * 60 * 60 * 1000);
@@ -271,5 +352,18 @@ export const clubsRouter = createTRPCRouter({
           return null;
         }
       }
+    }),
+
+  // Archive a poll (remove it) after winner is announced; optional score ignored for now
+  archivePoll: publicProcedure
+    .input(z.object({ pollId: z.string(), score: z.number().min(1).max(5).optional() }))
+    .mutation(async ({ ctx, input }) => {
+      // In the future we can persist score in a ReadingRound table
+      try {
+        await ctx.db.poll.delete({ where: { id: input.pollId } });
+      } catch {
+        // ignore if already gone
+      }
+      return { ok: true } as const;
     }),
 });
