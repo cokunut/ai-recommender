@@ -62,5 +62,31 @@ export const clubsRouter = createTRPCRouter({
       const group = await ctx.db.group.findUnique({ where: { id: input.id } });
       return group;
     }),
-});
 
+  isMember: publicProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const userId = await getOrCreateCurrentUserId(ctx);
+      const membership = await ctx.db.groupMember.findUnique({
+        where: { groupId_userId: { groupId: input.id, userId } },
+      });
+      return Boolean(membership);
+    }),
+
+  join: publicProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const userId = await getOrCreateCurrentUserId(ctx);
+
+      // Ensure the group exists
+      const group = await ctx.db.group.findUnique({ where: { id: input.id } });
+      if (!group) return null;
+
+      const membership = await ctx.db.groupMember.upsert({
+        where: { groupId_userId: { groupId: input.id, userId } },
+        update: {},
+        create: { groupId: input.id, userId, role: "MEMBER" },
+      });
+      return membership;
+    }),
+});
