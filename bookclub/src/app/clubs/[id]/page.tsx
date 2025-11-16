@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { api } from "~/trpc/server";
 import { JoinClubButton } from "./JoinClubButton";
+import { ClubRecommendations } from "./ClubRecommendations";
 
 export default async function ClubDetailsPage({ params }: { params: { id: string } }) {
   const { id } = params;
@@ -16,6 +17,7 @@ export default async function ClubDetailsPage({ params }: { params: { id: string
         <p className="text-rose-700/80">{group?.description ?? `club details here (id: ${id})`}</p>
         {!isMember ? <JoinClubButton groupId={id} /> : null}
       </section>
+      {isMember ? <ClubRecommendations groupId={id} /> : null}
     </main>
   );
 }
