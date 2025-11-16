@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { auth, signIn } from "~/server/auth";
+import { auth, signIn, signOut } from "~/server/auth";
 
 export default async function Home() {
   const session = await auth();
@@ -21,6 +21,16 @@ export default async function Home() {
             <Link href="/clubs" className="cute-button">
               Go to your clubs
             </Link>
+            <form
+              action={async () => {
+                "use server";
+                await signOut();
+              }}
+            >
+              <button type="submit" className="cute-button-outline text-sm">
+                Sign out
+              </button>
+            </form>
           </div>
         ) : (
           <div className="flex flex-col items-center gap-3">
@@ -34,9 +44,6 @@ export default async function Home() {
                 Sign in with Google
               </button>
             </form>
-            <Link href="/clubs" className="cute-button-outline text-sm">
-              Continue without signing in
-            </Link>
           </div>
         )}
       </section>
