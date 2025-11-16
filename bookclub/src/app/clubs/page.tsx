@@ -11,9 +11,10 @@ export default async function ClubsPage() {
           <h1 className="text-3xl font-extrabold text-rose-800">Your Clubs</h1>
           <p className="text-rose-700/70">Browse and manage your book clubs.</p>
         </div>
-        <Link href="/clubs/new" className="cute-button text-base">
-          + Create Club
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link href="/profile" className="cute-button-outline text-base">Profile</Link>
+          <Link href="/clubs/new" className="cute-button text-base">+ Create Club</Link>
+        </div>
       </header>
 
       {clubs.length === 0 ? (
