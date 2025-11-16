@@ -61,9 +61,17 @@ model User {
     email         String?   @unique
     emailVerified DateTime?
     image         String?
+    avatarUrl     String?
+    createdAt     DateTime  @default(now())
     accounts      Account[]
     sessions      Session[]
     posts         Post[]
+    groupsCreated Group[]   @relation("GroupCreatedBy")
+    memberships   GroupMember[]
+    pollsCreated      Poll[]         @relation("PollCreatedBy")
+    pollChoicesAdded  PollChoice[]   @relation("PollChoiceAddedBy")
+    votes             Vote[]
+    goodreadsImports  GoodreadsImport[] @relation("GoodreadsImportUser")
 }
 
 model VerificationToken {
@@ -72,4 +80,166 @@ model VerificationToken {
     expires    DateTime
 
     @@unique([identifier, token])
+}
+
+// -----------------------------
+// Bookclub domain models
+// -----------------------------
+
+enum GovernanceMode {
+  OWNER_ADMIN
+  ALL_MEMBERS
+}
+
+enum GroupRole {
+  MEMBER
+  ADMIN
+  OWNER
+}
+
+enum PollSelectionType {
+  AI_GENERATED
+  USER_SELECTED
+}
+
+enum PollStatus {
+  DRAFT
+  ACTIVE
+  CLOSED
+}
+
+enum GoodreadsImportStatus {
+  PENDING
+  PROCESSING
+  DONE
+  ERROR
+}
+
+enum ReadingRoundStatus {
+  SETUP
+  VOTING
+  READING
+  FINISHED
+}
+
+model Group {
+  id               String          @id @default(cuid())
+  name             String
+  description      String?
+  governanceMode   GovernanceMode  @default(OWNER_ADMIN)
+  createdAt        DateTime        @default(now())
+  createdByUserId  String
+  createdBy        User            @relation("GroupCreatedBy", fields: [createdByUserId], references: [id])
+  members          GroupMember[]
+  polls            Poll[]
+  readingRounds    ReadingRound[]
+
+  @@index([name])
+}
+
+model GroupMember {
+  id        String    @id @default(cuid())
+  groupId   String
+  userId    String
+  role      GroupRole @default(MEMBER)
+  joinedAt  DateTime  @default(now())
+  group     Group     @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId])
+  @@index([userId])
+}
+
+model Book {
+  id             String   @id @default(cuid())
+  title          String
+  authors        String
+  isbn           String?
+  coverImageUrl  String?
+  description    String?
+  externalIds    Json?
+  createdAt      DateTime @default(now())
+  pollChoices    PollChoice[]
+  winningPolls   Poll[]      @relation("WinningBook")
+  readingRounds  ReadingRound[]
+
+  @@index([title])
+}
+
+model GoodreadsImport {
+  id            String                 @id @default(cuid())
+  userId        String
+  jsonData      Json
+  status        GoodreadsImportStatus  @default(PENDING)
+  importedCount Int                    @default(0)
+  createdAt     DateTime               @default(now())
+  user          User                   @relation("GoodreadsImportUser", fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Poll {
+  id               String            @id @default(cuid())
+  groupId          String
+  createdByUserId  String
+  selectionType    PollSelectionType @default(USER_SELECTED)
+  status           PollStatus        @default(DRAFT)
+  startsAt         DateTime?
+  endsAt           DateTime?
+  winningBookId    String?
+  createdAt        DateTime          @default(now())
+
+  group            Group             @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  createdBy        User              @relation("PollCreatedBy", fields: [createdByUserId], references: [id], onDelete: Cascade)
+  choices          PollChoice[]
+  votes            Vote[]
+  winningBook      Book?             @relation("WinningBook", fields: [winningBookId], references: [id])
+  readingRounds    ReadingRound[]
+
+  @@index([groupId])
+}
+
+model PollChoice {
+  id             String   @id @default(cuid())
+  pollId         String
+  bookId         String
+  addedByUserId  String?
+  createdAt      DateTime @default(now())
+
+  poll           Poll     @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  book           Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  addedBy        User?    @relation("PollChoiceAddedBy", fields: [addedByUserId], references: [id])
+  votes          Vote[]
+
+  @@unique([pollId, bookId])
+}
+
+model Vote {
+  id        String   @id @default(cuid())
+  pollId    String
+  choiceId  String
+  userId    String
+  createdAt DateTime @default(now())
+
+  poll      Poll      @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  choice    PollChoice @relation(fields: [choiceId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([pollId, userId])
+  @@index([choiceId])
+}
+
+model ReadingRound {
+  id          String             @id @default(cuid())
+  groupId     String
+  pollId      String?
+  bookId      String?
+  status      ReadingRoundStatus @default(SETUP)
+  startedAt   DateTime?
+  finishedAt  DateTime?
+  createdAt   DateTime          @default(now())
+
+  group       Group             @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  poll        Poll?             @relation(fields: [pollId], references: [id])
+  book        Book?             @relation(fields: [bookId], references: [id])
+
+  @@index([groupId])
 }

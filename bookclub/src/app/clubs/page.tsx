@@ -1,19 +1,15 @@
 import Link from "next/link";
-import { auth } from "~/server/auth";
+import { api } from "~/trpc/server";
 
 export default async function ClubsPage() {
-  const session = await auth();
-
-  const clubs: Array<{ id: string; name: string }> = [];
+  const clubs = await api.clubs.list();
 
   return (
     <main className="mx-auto max-w-4xl px-6 py-10">
       <header className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-extrabold text-rose-800">Your Clubs</h1>
-          <p className="text-rose-700/70">
-            {session?.user ? `Welcome, ${session.user.name ?? "reader"}!` : "Browsing without an account."}
-          </p>
+          <p className="text-rose-700/70">Browse and manage your book clubs.</p>
         </div>
         <Link href="/clubs/new" className="cute-button text-base">
           + Create Club
@@ -44,4 +40,3 @@ export default async function ClubsPage() {
     </main>
   );
 }
-
