@@ -11,8 +11,7 @@ export default async function Home() {
           Welcome to Bookclub ✨
         </h1>
         <p className="mx-auto mb-6 max-w-prose text-balance text-rose-700/80">
-          Cozy corners, cute colors, and your favorite reads —
-          gather your clubs and plan your next chapter together.
+          Create a club, invite your friends, and choose your next great read together. Get tailored recommendations based on your group’s tastes — then vote, read, and discuss.
         </p>
 
         {session?.user ? (
@@ -53,13 +52,7 @@ export default async function Home() {
         )}
       </section>
 
-      <section className="cute-card w-full">
-        <h2 className="mb-2 text-2xl font-bold text-rose-700">What is Bookclub?</h2>
-        <p className="text-rose-700/80">
-          Create clubs, track reads, and organize your discussions. Sign in to save
-          your clubs across devices.
-        </p>
-      </section>
+      {/* Removed the "What is Bookclub?" section for a cleaner landing */}
     </main>
   );
 }
