@@ -541,23 +541,17 @@ export const clubsRouter = createTRPCRouter({
 
       // Build prompt with all reviews
       const reviewsText = round.reviews
-        .map((r, idx) => `${idx + 1}. ${r.user.name ?? "Anonymous"}: "${r.reviewText}"`)
+        .map((r) => `"${r.reviewText}"`)
         .join("\n\n");
 
-      const prompt = `You are synthesizing book club member reviews into a cohesive group review.
+      const prompt = `Synthesize these book club member reviews into one concise group review (2-3 sentences max). Use only what people actually wrote - don't add details not mentioned.
 
 Book: "${round.book.title}" by ${round.book.authors}
 
-Individual Member Reviews:
+Member reviews:
 ${reviewsText}
 
-Please create a synthesized group review (2-4 paragraphs) that:
-1. Captures the overall sentiment and key themes from the individual reviews
-2. Highlights both positive and critical perspectives
-3. Reflects the diversity of opinions in the group
-4. Is written in a cohesive, natural style (not just a summary)
-
-Return ONLY the review text, no markdown formatting, no quotes, just the review.`;
+Return ONLY the synthesized review text, no markdown, no quotes, no extra commentary. Be pithy and direct.`;
 
       try {
         const groqResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -569,11 +563,11 @@ Return ONLY the review text, no markdown formatting, no quotes, just the review.
           body: JSON.stringify({
             model: "llama-3.3-70b-versatile",
             messages: [
-              { role: "system", content: "You are a helpful assistant that synthesizes book reviews." },
+              { role: "system", content: "You synthesize book reviews concisely. Only use information from the provided reviews. Be brief and direct." },
               { role: "user", content: prompt },
             ],
-            temperature: 0.7,
-            max_tokens: 1000,
+            temperature: 0.5,
+            max_tokens: 200,
           }),
         });
 

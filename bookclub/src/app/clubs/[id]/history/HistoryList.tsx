@@ -62,14 +62,20 @@ export function HistoryList({ history, clubId }: { history: HistoryItem[]; clubI
 
               {/* Book Info and Reviews */}
               <div className="flex-1 space-y-4">
-                {/* Title and Rating */}
+                {/* Title and Date */}
                 <div>
                   <h2 className="text-xl font-bold text-rose-800">{item.book.title}</h2>
                   <p className="text-rose-700/70">{item.book.authors}</p>
                   {item.finishedAt && (
-                    <p className="mt-1 text-sm text-rose-600/70">
-                      Finished {new Date(item.finishedAt).toLocaleDateString()}
-                    </p>
+                    <div className="mt-2 inline-block rounded-full border border-rose-200 bg-rose-50 px-3 py-1">
+                      <span className="text-sm font-medium text-rose-700">
+                        Finished {new Date(item.finishedAt).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        })}
+                      </span>
+                    </div>
                   )}
                 </div>
 
