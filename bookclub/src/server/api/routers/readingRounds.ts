@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { env } from "~/env";
+import { TRPCError } from "@trpc/server";
 
 async function getOrCreateCurrentUserId(ctx: { session: any; db: any }) {
   if (ctx.session?.user?.id) return ctx.session.user.id as string;
@@ -391,6 +392,825 @@ IMPORTANT: Return ONLY a valid JSON array with this exact structure (no markdown
           model: input.model,
         },
       };
+    }),
+
+  // Get current reading round for a club
+  getCurrentRound: publicProcedure
+    .input(z.object({ groupId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const userId = await getOrCreateCurrentUserId(ctx);
+
+      // Get the most recent non-finished reading round
+      const round = await ctx.db.readingRound.findFirst({
+        where: {
+          groupId: input.groupId,
+          status: { not: "FINISHED" },
+        },
+        include: {
+          poll: {
+            include: {
+              choices: {
+                include: {
+                  book: true,
+                  votes: true,
+                  addedBy: {
+                    select: {
+                      id: true,
+                    },
+                  },
+                },
+              },
+              votes: true,
+            },
+          },
+          book: true,
+          ratings: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+            },
+          },
+          reviews: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      });
+
+      if (!round) return null;
+
+      const memberCount = await ctx.db.groupMember.count({
+        where: { groupId: input.groupId },
+      });
+
+      const myRating = round.ratings.find((r) => r.userId === userId);
+      const myReview = round.reviews.find((r) => r.userId === userId);
+
+      // Calculate average rating
+      const avgRating =
+        round.ratings.length > 0
+          ? round.ratings.reduce((sum, r) => sum + r.rating, 0) / round.ratings.length
+          : null;
+
+      // If there's a poll, get voting info and auto-close if needed
+      let pollData = null;
+      if (round.poll) {
+        const now = new Date();
+        const endedByTime = round.poll.endsAt ? round.poll.endsAt <= now : false;
+        const totalVotes = round.poll.votes.length;
+        const allVoted = totalVotes >= memberCount && memberCount > 0;
+
+        // Determine winner
+        const choiceTallies = round.poll.choices.map((c) => ({
+          id: c.id,
+          book: c.book,
+          votes: c.votes.length,
+        }));
+        const sorted = [...choiceTallies].sort((a, b) => b.votes - a.votes);
+        const winner = sorted[0];
+
+        // Auto-close poll if voting has ended
+        if (round.poll.status === "ACTIVE" && (endedByTime || allVoted)) {
+          await ctx.db.poll.update({
+            where: { id: round.poll.id },
+            data: {
+              status: "CLOSED",
+              winningBookId: winner?.book?.id ?? null,
+            },
+          });
+          round.poll.status = "CLOSED";
+          round.poll.winningBookId = winner?.book?.id ?? null;
+        }
+
+        const myVote = round.poll.votes.find((v) => v.userId === userId) || null;
+
+        pollData = {
+          ...round.poll,
+          memberCount,
+          myVoteChoiceId: myVote?.choiceId ?? null,
+          allVoted,
+          endedByTime,
+          winnerBookId:
+            round.poll.status === "CLOSED" ? (winner?.book?.id ?? null) : null,
+        };
+      }
+
+      return {
+        ...round,
+        poll: pollData,
+        memberCount,
+        myRating: myRating?.rating ?? null,
+        myReview: myReview?.reviewText ?? null,
+        avgRating: avgRating ? Math.round(avgRating * 10) / 10 : null,
+        ratingCount: round.ratings.length,
+        reviewCount: round.reviews.length,
+      };
+    }),
+
+  // Create a new reading round and generate recommendations
+  createRoundWithRecommendations: publicProcedure
+    .input(
+      z.object({
+        groupId: z.string(),
+        aiDirection: z.string().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const userId = await getOrCreateCurrentUserId(ctx);
+
+      // Check if user is admin/owner
+      const membership = await ctx.db.groupMember.findUnique({
+        where: { groupId_userId: { groupId: input.groupId, userId } },
+      });
+
+      if (!membership || (membership.role !== "OWNER" && membership.role !== "ADMIN")) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only admins can create reading rounds",
+        });
+      }
+
+      // Check if there's already an active round
+      const existing = await ctx.db.readingRound.findFirst({
+        where: {
+          groupId: input.groupId,
+          status: { not: "FINISHED" },
+        },
+      });
+
+      if (existing) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "There is already an active reading round",
+        });
+      }
+
+      // Generate recommendations using the existing logic
+      const group = await ctx.db.group.findUnique({
+        where: { id: input.groupId },
+        select: { id: true, name: true, description: true },
+      });
+
+      if (!group) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Group not found" });
+      }
+
+      const memberships = await ctx.db.groupMember.findMany({
+        where: { groupId: input.groupId },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              goodreadsImports: {
+                orderBy: { createdAt: "desc" },
+                select: { jsonData: true },
+              },
+            },
+          },
+        },
+      });
+
+      const memberDetails = memberships
+        .map((m, idx) => {
+          const hasGR = m.user.goodreadsImports.length > 0;
+          return `${idx + 1}. ${m.user.name ?? "Anonymous"}\n   - ${hasGR ? "Has Goodreads data" : "No Goodreads data"}`;
+        })
+        .join("\n\n");
+
+      let prompt = `You are a book recommendation expert for book clubs. Based on the following information about a book club and its members, recommend exactly 3 books that would be perfect for this group's next reading round.\n\nBook Club Information:\n- Name: ${group.name}\n- Description: ${group.description ?? "No description provided"}\n\nMembers (${memberships.length} total):\n${memberDetails}\n\nPlease recommend exactly 3 books and return ONLY a valid JSON array with objects: {\n  "title": "Book Title",\n  "author": "Author Name",\n  "reasoning": "Why this book fits the group..."\n}`;
+
+      if (input.aiDirection) {
+        prompt += `\n\nAdditional guidance: ${input.aiDirection}`;
+      }
+
+      let books: Array<{ id: string; title: string; authors: string }> = [];
+
+      try {
+        if (!env.GROQ_API_KEY) throw new Error("GROQ_API_KEY missing");
+
+        const groqResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${env.GROQ_API_KEY}`,
+          },
+          body: JSON.stringify({
+            model: "llama-3.3-70b-versatile",
+            messages: [
+              { role: "system", content: "Return valid JSON arrays only." },
+              { role: "user", content: prompt },
+            ],
+            temperature: 0.7,
+            max_tokens: 1200,
+          }),
+        });
+
+        if (!groqResponse.ok) throw new Error(await groqResponse.text());
+        const groqData = (await groqResponse.json()) as any;
+        const content: string | undefined = groqData.choices?.[0]?.message?.content;
+        if (!content) throw new Error("No content from Groq");
+
+        let recs: Array<{ title: string; author: string }> = [];
+        try {
+          const parsed = JSON.parse(content);
+          recs = Array.isArray(parsed) ? parsed : parsed.books || parsed.recommendations || [];
+        } catch {
+          const jsonMatch = content.match(/```(?:json)?\s*(\[[\s\S]*\])\s*```/);
+          if (jsonMatch) {
+            recs = JSON.parse(jsonMatch[1]!);
+          } else {
+            throw new Error("Failed to parse Groq JSON");
+          }
+        }
+
+        if (!Array.isArray(recs) || recs.length < 3) throw new Error("Invalid recs");
+
+        // Upsert or create books
+        for (const r of recs.slice(0, 3)) {
+          const title = r.title?.trim();
+          const author = r.author?.trim();
+          if (!title || !author) continue;
+          const existing = await ctx.db.book.findFirst({
+            where: { title, authors: author },
+          });
+          const book =
+            existing ??
+            (await ctx.db.book.create({ data: { title, authors: author } }));
+          books.push({ id: book.id, title: book.title, authors: book.authors });
+        }
+      } catch (err) {
+        // Fallback to sample books
+        const samples = [
+          { title: "The Great Gatsby", authors: "F. Scott Fitzgerald" },
+          { title: "Pride and Prejudice", authors: "Jane Austen" },
+          { title: "1984", authors: "George Orwell" },
+        ];
+        for (const s of samples) {
+          const existing = await ctx.db.book.findFirst({
+            where: { title: s.title, authors: s.authors },
+          });
+          const book =
+            existing ??
+            (await ctx.db.book.create({ data: { title: s.title, authors: s.authors } }));
+          books.push({ id: book.id, title: book.title, authors: book.authors });
+        }
+      }
+
+      if (books.length === 0) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to generate book recommendations",
+        });
+      }
+
+      // Create reading round
+      const now = new Date();
+      const endsAt = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+
+      const poll = await ctx.db.poll.create({
+        data: {
+          groupId: input.groupId,
+          createdByUserId: userId,
+          selectionType: "AI_GENERATED",
+          status: "DRAFT",
+          startsAt: now,
+          endsAt,
+          choices: {
+            create: books.map((b) => ({ bookId: b.id, addedByUserId: userId })),
+          },
+        },
+        include: { choices: { include: { book: true } } },
+      });
+
+      const readingRound = await ctx.db.readingRound.create({
+        data: {
+          groupId: input.groupId,
+          pollId: poll.id,
+          status: "SETUP",
+        },
+        include: {
+          poll: {
+            include: {
+              choices: {
+                include: {
+                  book: true,
+                  votes: true,
+                },
+              },
+              votes: true,
+            },
+          },
+        },
+      });
+
+      return readingRound;
+    }),
+
+  // Add a user-generated recommendation
+  addUserRecommendation: publicProcedure
+    .input(
+      z.object({
+        readingRoundId: z.string(),
+        title: z.string().min(1),
+        author: z.string().min(1),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const userId = await getOrCreateCurrentUserId(ctx);
+
+      const round = await ctx.db.readingRound.findUnique({
+        where: { id: input.readingRoundId },
+        include: { poll: true },
+      });
+
+      if (!round || !round.poll) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Reading round or poll not found",
+        });
+      }
+
+      if (round.status !== "SETUP") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Can only add recommendations during setup",
+        });
+      }
+
+      // Try to fetch cover from Open Library
+      let coverImageUrl: string | null = null;
+      try {
+        const searchParams = new URLSearchParams({
+          title: input.title,
+          author: input.author,
+        });
+        const searchUrl = `https://openlibrary.org/search.json?${searchParams.toString()}`;
+        const searchResponse = await fetch(searchUrl, {
+          headers: {
+            "User-Agent": "Bookclub App",
+          },
+        });
+
+        if (searchResponse.ok) {
+          const searchData = (await searchResponse.json()) as {
+            numFound: number;
+            docs: Array<{ cover_i?: number }>;
+          };
+          if (searchData.numFound > 0 && searchData.docs[0]?.cover_i) {
+            coverImageUrl = `https://covers.openlibrary.org/b/id/${searchData.docs[0].cover_i}-M.jpg`;
+          }
+        }
+      } catch (error) {
+        // Silently fail - we'll just use emoji placeholder
+        console.error("Error fetching cover:", error);
+      }
+
+      // Upsert or create book
+      const existing = await ctx.db.book.findFirst({
+        where: { title: input.title, authors: input.author },
+      });
+      const book =
+        existing
+          ? await ctx.db.book.update({
+              where: { id: existing.id },
+              data: { coverImageUrl: coverImageUrl ?? existing.coverImageUrl },
+            })
+          : await ctx.db.book.create({
+              data: { title: input.title, authors: input.author, coverImageUrl },
+            });
+
+      // Add to poll choices
+      await ctx.db.pollChoice.create({
+        data: {
+          pollId: round.poll.id,
+          bookId: book.id,
+          addedByUserId: userId,
+        },
+      });
+
+      return { ok: true };
+    }),
+
+  // Delete a recommendation
+  deleteRecommendation: publicProcedure
+    .input(
+      z.object({
+        readingRoundId: z.string(),
+        choiceId: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const userId = await getOrCreateCurrentUserId(ctx);
+
+      const round = await ctx.db.readingRound.findUnique({
+        where: { id: input.readingRoundId },
+        include: {
+          poll: {
+            include: {
+              choices: true,
+            },
+          },
+        },
+      });
+
+      if (!round || !round.poll) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Reading round or poll not found",
+        });
+      }
+
+      if (round.status !== "SETUP") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Can only delete recommendations during setup",
+        });
+      }
+
+      const choice = round.poll.choices.find((c) => c.id === input.choiceId);
+      if (!choice) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Recommendation not found",
+        });
+      }
+
+      // Check if user is admin/owner or the one who added it
+      const membership = await ctx.db.groupMember.findUnique({
+        where: { groupId_userId: { groupId: round.groupId, userId } },
+      });
+
+      const isAdmin = membership?.role === "OWNER" || membership?.role === "ADMIN";
+      const isCreator = choice.addedByUserId === userId;
+
+      if (!isAdmin && !isCreator) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only admins or the person who added it can delete recommendations",
+        });
+      }
+
+      await ctx.db.pollChoice.delete({
+        where: { id: input.choiceId },
+      });
+
+      return { ok: true };
+    }),
+
+  // Start voting (transition from SETUP to VOTING)
+  startVote: publicProcedure
+    .input(z.object({ readingRoundId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const userId = await getOrCreateCurrentUserId(ctx);
+
+      const round = await ctx.db.readingRound.findUnique({
+        where: { id: input.readingRoundId },
+        include: { poll: true },
+      });
+
+      if (!round || !round.poll) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Reading round or poll not found",
+        });
+      }
+
+      // Check if user is admin/owner
+      const membership = await ctx.db.groupMember.findUnique({
+        where: { groupId_userId: { groupId: round.groupId, userId } },
+      });
+
+      if (!membership || (membership.role !== "OWNER" && membership.role !== "ADMIN")) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only admins can start voting",
+        });
+      }
+
+      if (round.status !== "SETUP") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Can only start voting from SETUP status",
+        });
+      }
+
+      const now = new Date();
+      const endsAt = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+
+      // Update poll to ACTIVE
+      await ctx.db.poll.update({
+        where: { id: round.poll.id },
+        data: {
+          status: "ACTIVE",
+          startsAt: now,
+          endsAt,
+        },
+      });
+
+      // Update reading round to VOTING
+      await ctx.db.readingRound.update({
+        where: { id: input.readingRoundId },
+        data: {
+          status: "VOTING",
+          startedAt: now,
+        },
+      });
+
+      return { ok: true };
+    }),
+
+  // Submit a vote
+  submitVote: publicProcedure
+    .input(
+      z.object({
+        readingRoundId: z.string(),
+        choiceId: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const userId = await getOrCreateCurrentUserId(ctx);
+
+      const round = await ctx.db.readingRound.findUnique({
+        where: { id: input.readingRoundId },
+        include: { poll: true },
+      });
+
+      if (!round || !round.poll) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Reading round or poll not found",
+        });
+      }
+
+      if (round.status !== "VOTING" || round.poll.status !== "ACTIVE") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Voting is not active",
+        });
+      }
+
+      // Check if poll has ended
+      const now = new Date();
+      if (round.poll.endsAt && round.poll.endsAt <= now) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Voting period has ended",
+        });
+      }
+
+      // Upsert vote
+      await ctx.db.vote.upsert({
+        where: { pollId_userId: { pollId: round.poll.id, userId } },
+        create: { pollId: round.poll.id, userId, choiceId: input.choiceId },
+        update: { choiceId: input.choiceId },
+      });
+
+      return { ok: true };
+    }),
+
+  // Start reading (transition from VOTING to READING when vote completes)
+  startReading: publicProcedure
+    .input(z.object({ readingRoundId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const userId = await getOrCreateCurrentUserId(ctx);
+
+      const round = await ctx.db.readingRound.findUnique({
+        where: { id: input.readingRoundId },
+        include: {
+          poll: {
+            include: {
+              choices: {
+                include: {
+                  book: true,
+                  votes: true,
+                },
+              },
+              votes: true,
+            },
+          },
+        },
+      });
+
+      if (!round || !round.poll) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Reading round or poll not found",
+        });
+      }
+
+      // Check if user is admin/owner
+      const membership = await ctx.db.groupMember.findUnique({
+        where: { groupId_userId: { groupId: round.groupId, userId } },
+      });
+
+      if (!membership || (membership.role !== "OWNER" && membership.role !== "ADMIN")) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only admins can start reading",
+        });
+      }
+
+      if (round.status !== "VOTING") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Can only start reading from VOTING status",
+        });
+      }
+
+      // Determine winner
+      const choiceTallies = round.poll.choices.map((c) => ({
+        id: c.id,
+        book: c.book,
+        votes: c.votes.length,
+      }));
+      const sorted = [...choiceTallies].sort((a, b) => b.votes - a.votes);
+      const winner = sorted[0];
+
+      if (!winner) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "No winner determined",
+        });
+      }
+
+      // Close poll and set winner
+      await ctx.db.poll.update({
+        where: { id: round.poll.id },
+        data: {
+          status: "CLOSED",
+          winningBookId: winner.book.id,
+        },
+      });
+
+      // Update reading round to READING
+      const now = new Date();
+      await ctx.db.readingRound.update({
+        where: { id: input.readingRoundId },
+        data: {
+          status: "READING",
+          bookId: winner.book.id,
+        },
+      });
+
+      return { ok: true };
+    }),
+
+  // Submit rating
+  submitRating: publicProcedure
+    .input(
+      z.object({
+        readingRoundId: z.string(),
+        rating: z.number().min(1).max(5),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const userId = await getOrCreateCurrentUserId(ctx);
+
+      const round = await ctx.db.readingRound.findUnique({
+        where: { id: input.readingRoundId },
+      });
+
+      if (!round) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Reading round not found",
+        });
+      }
+
+      if (round.status !== "READING") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Can only rate during READING status",
+        });
+      }
+
+      await ctx.db.rating.upsert({
+        where: {
+          readingRoundId_userId: {
+            readingRoundId: input.readingRoundId,
+            userId,
+          },
+        },
+        create: {
+          readingRoundId: input.readingRoundId,
+          userId,
+          rating: input.rating,
+        },
+        update: {
+          rating: input.rating,
+        },
+      });
+
+      return { ok: true };
+    }),
+
+  // Submit review
+  submitReview: publicProcedure
+    .input(
+      z.object({
+        readingRoundId: z.string(),
+        reviewText: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const userId = await getOrCreateCurrentUserId(ctx);
+
+      const round = await ctx.db.readingRound.findUnique({
+        where: { id: input.readingRoundId },
+      });
+
+      if (!round) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Reading round not found",
+        });
+      }
+
+      if (round.status !== "READING") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Can only review during READING status",
+        });
+      }
+
+      await ctx.db.review.upsert({
+        where: {
+          readingRoundId_userId: {
+            readingRoundId: input.readingRoundId,
+            userId,
+          },
+        },
+        create: {
+          readingRoundId: input.readingRoundId,
+          userId,
+          reviewText: input.reviewText,
+        },
+        update: {
+          reviewText: input.reviewText,
+        },
+      });
+
+      return { ok: true };
+    }),
+
+  // Finish reading (transition from READING to FINISHED)
+  finishReading: publicProcedure
+    .input(z.object({ readingRoundId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const userId = await getOrCreateCurrentUserId(ctx);
+
+      const round = await ctx.db.readingRound.findUnique({
+        where: { id: input.readingRoundId },
+      });
+
+      if (!round) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Reading round not found",
+        });
+      }
+
+      // Check if user is admin/owner
+      const membership = await ctx.db.groupMember.findUnique({
+        where: { groupId_userId: { groupId: round.groupId, userId } },
+      });
+
+      if (!membership || (membership.role !== "OWNER" && membership.role !== "ADMIN")) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only admins can finish reading",
+        });
+      }
+
+      if (round.status !== "READING") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Can only finish from READING status",
+        });
+      }
+
+      const now = new Date();
+      await ctx.db.readingRound.update({
+        where: { id: input.readingRoundId },
+        data: {
+          status: "FINISHED",
+          finishedAt: now,
+        },
+      });
+
+      return { ok: true };
     }),
 });
 

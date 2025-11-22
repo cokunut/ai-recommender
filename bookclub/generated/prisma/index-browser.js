@@ -235,7 +235,25 @@ exports.Prisma.ReadingRoundScalarFieldEnum = {
   status: 'status',
   startedAt: 'startedAt',
   finishedAt: 'finishedAt',
+  createdAt: 'createdAt',
+  aiGroupReview: 'aiGroupReview'
+};
+
+exports.Prisma.RatingScalarFieldEnum = {
+  id: 'id',
+  readingRoundId: 'readingRoundId',
+  userId: 'userId',
+  rating: 'rating',
   createdAt: 'createdAt'
+};
+
+exports.Prisma.ReviewScalarFieldEnum = {
+  id: 'id',
+  readingRoundId: 'readingRoundId',
+  userId: 'userId',
+  reviewText: 'reviewText',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 };
 
 exports.Prisma.SortOrder = {
@@ -315,7 +333,9 @@ exports.Prisma.ModelName = {
   Poll: 'Poll',
   PollChoice: 'PollChoice',
   Vote: 'Vote',
-  ReadingRound: 'ReadingRound'
+  ReadingRound: 'ReadingRound',
+  Rating: 'Rating',
+  Review: 'Review'
 };
 
 /**

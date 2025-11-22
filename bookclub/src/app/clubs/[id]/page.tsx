@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { api } from "~/trpc/server";
 import { JoinClubButton } from "./_components/join-club-button";
-import { ClubRecommendations } from "./_components/club-recommendations";
+import { ReadingRoundDisplay } from "./_components/reading-round-display";
 import { CopyLinkButton } from "./_components/copy-link-button";
 import { ViewHistoryButton } from "./_components/view-history-button";
 import { DeleteClubButton } from "./_components/delete-club-button";
@@ -62,7 +62,7 @@ export default async function ClubDetailsPage({ params }: { params: Promise<{ id
           </ul>
         )}
       </section>
-      {isMember ? <ClubRecommendations groupId={id} /> : null}
+      {isMember ? <ReadingRoundDisplay groupId={id} isAdmin={isOwnerOrAdmin} /> : null}
       {isMember ? (
         <section className="cute-card mt-6">
           <div className="flex items-center gap-3">
