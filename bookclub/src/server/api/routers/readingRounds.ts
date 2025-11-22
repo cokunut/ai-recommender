@@ -413,6 +413,11 @@ IMPORTANT: Return ONLY a valid JSON array with this exact structure (no markdown
                 include: {
                   book: true,
                   votes: true,
+                  addedBy: {
+                    select: {
+                      id: true,
+                    },
+                  },
                 },
               },
               votes: true,
@@ -744,15 +749,47 @@ IMPORTANT: Return ONLY a valid JSON array with this exact structure (no markdown
         });
       }
 
+      // Try to fetch cover from Open Library
+      let coverImageUrl: string | null = null;
+      try {
+        const searchParams = new URLSearchParams({
+          title: input.title,
+          author: input.author,
+        });
+        const searchUrl = `https://openlibrary.org/search.json?${searchParams.toString()}`;
+        const searchResponse = await fetch(searchUrl, {
+          headers: {
+            "User-Agent": "Bookclub App",
+          },
+        });
+
+        if (searchResponse.ok) {
+          const searchData = (await searchResponse.json()) as {
+            numFound: number;
+            docs: Array<{ cover_i?: number }>;
+          };
+          if (searchData.numFound > 0 && searchData.docs[0]?.cover_i) {
+            coverImageUrl = `https://covers.openlibrary.org/b/id/${searchData.docs[0].cover_i}-M.jpg`;
+          }
+        }
+      } catch (error) {
+        // Silently fail - we'll just use emoji placeholder
+        console.error("Error fetching cover:", error);
+      }
+
       // Upsert or create book
       const existing = await ctx.db.book.findFirst({
         where: { title: input.title, authors: input.author },
       });
       const book =
-        existing ??
-        (await ctx.db.book.create({
-          data: { title: input.title, authors: input.author },
-        }));
+        existing
+          ? await ctx.db.book.update({
+              where: { id: existing.id },
+              data: { coverImageUrl: coverImageUrl ?? existing.coverImageUrl },
+            })
+          : await ctx.db.book.create({
+              data: { title: input.title, authors: input.author, coverImageUrl },
+            });
 
       // Add to poll choices
       await ctx.db.pollChoice.create({
@@ -761,6 +798,72 @@ IMPORTANT: Return ONLY a valid JSON array with this exact structure (no markdown
           bookId: book.id,
           addedByUserId: userId,
         },
+      });
+
+      return { ok: true };
+    }),
+
+  // Delete a recommendation
+  deleteRecommendation: publicProcedure
+    .input(
+      z.object({
+        readingRoundId: z.string(),
+        choiceId: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const userId = await getOrCreateCurrentUserId(ctx);
+
+      const round = await ctx.db.readingRound.findUnique({
+        where: { id: input.readingRoundId },
+        include: {
+          poll: {
+            include: {
+              choices: true,
+            },
+          },
+        },
+      });
+
+      if (!round || !round.poll) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Reading round or poll not found",
+        });
+      }
+
+      if (round.status !== "SETUP") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Can only delete recommendations during setup",
+        });
+      }
+
+      const choice = round.poll.choices.find((c) => c.id === input.choiceId);
+      if (!choice) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Recommendation not found",
+        });
+      }
+
+      // Check if user is admin/owner or the one who added it
+      const membership = await ctx.db.groupMember.findUnique({
+        where: { groupId_userId: { groupId: round.groupId, userId } },
+      });
+
+      const isAdmin = membership?.role === "OWNER" || membership?.role === "ADMIN";
+      const isCreator = choice.addedByUserId === userId;
+
+      if (!isAdmin && !isCreator) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only admins or the person who added it can delete recommendations",
+        });
+      }
+
+      await ctx.db.pollChoice.delete({
+        where: { id: input.choiceId },
       });
 
       return { ok: true };

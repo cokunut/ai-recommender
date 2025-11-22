@@ -35,11 +35,18 @@ export function ReadingRoundDisplay({
 }) {
   const utils = api.useUtils();
   const { data: round, isLoading } = api.readingRounds.getCurrentRound.useQuery({ groupId });
+  const { data: currentUser } = api.user.getProfile.useQuery();
   const [aiDirection, setAiDirection] = useState("");
   const [selectedChoiceId, setSelectedChoiceId] = useState<string | null>(null);
   const [rating, setRating] = useState<number | null>(null);
   const [reviewText, setReviewText] = useState("");
   const [hasShownConfetti, setHasShownConfetti] = useState(false);
+  const [hasStartedReading, setHasStartedReading] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newBookTitle, setNewBookTitle] = useState("");
+  const [newBookAuthor, setNewBookAuthor] = useState("");
+  const [deletingChoiceId, setDeletingChoiceId] = useState<string | null>(null);
+  const [showFinishConfirm, setShowFinishConfirm] = useState(false);
 
   const createRound = api.readingRounds.createRoundWithRecommendations.useMutation({
     onSuccess: () => {
@@ -50,6 +57,16 @@ export function ReadingRoundDisplay({
   const addUserRec = api.readingRounds.addUserRecommendation.useMutation({
     onSuccess: () => {
       utils.readingRounds.getCurrentRound.invalidate({ groupId });
+      setNewBookTitle("");
+      setNewBookAuthor("");
+      setShowAddForm(false);
+    },
+  });
+
+  const deleteRec = api.readingRounds.deleteRecommendation.useMutation({
+    onSuccess: () => {
+      utils.readingRounds.getCurrentRound.invalidate({ groupId });
+      setDeletingChoiceId(null);
     },
   });
 
@@ -69,13 +86,7 @@ export function ReadingRoundDisplay({
   const startReading = api.readingRounds.startReading.useMutation({
     onSuccess: () => {
       utils.readingRounds.getCurrentRound.invalidate({ groupId });
-      // Trigger confetti when admin starts reading
-      const confettiOptions: ConfettiOptions = {
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 },
-      };
-      confetti(confettiOptions);
+      setHasStartedReading(true);
     },
   });
 
@@ -94,12 +105,19 @@ export function ReadingRoundDisplay({
   const finishReading = api.readingRounds.finishReading.useMutation({
     onSuccess: () => {
       utils.readingRounds.getCurrentRound.invalidate({ groupId });
+      setShowFinishConfirm(false);
     },
   });
 
-  // Show confetti when vote completes and user first sees it
+  // Reset confetti and reading state when round changes
   useEffect(() => {
-    if (round?.status === "VOTING" && round.poll && !hasShownConfetti) {
+    setHasShownConfetti(false);
+    setHasStartedReading(false);
+  }, [round?.id]);
+
+  // Show confetti when vote completes and automatically start reading
+  useEffect(() => {
+    if (round?.status === "VOTING" && round.poll && !hasShownConfetti && !hasStartedReading) {
       const now = new Date();
       const endedByTime = round.poll.endsAt ? new Date(round.poll.endsAt) <= now : false;
       const isClosed = round.poll.status === "CLOSED" || endedByTime || round.poll.allVoted;
@@ -113,9 +131,16 @@ export function ReadingRoundDisplay({
           origin: { y: 0.6 },
         };
         confetti(confettiOptions);
+        
+        // Automatically start reading after a short delay (to let confetti show)
+        setTimeout(() => {
+          if (round.id && !hasStartedReading) {
+            startReading.mutate({ readingRoundId: round.id });
+          }
+        }, 1500);
       }
     }
-  }, [round, hasShownConfetti]);
+  }, [round, hasShownConfetti, hasStartedReading, startReading]);
 
   // Initialize selected choice from existing vote
   useEffect(() => {
@@ -196,8 +221,48 @@ export function ReadingRoundDisplay({
               <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 {poll.choices.map((choice: any) => {
                   const book = choice.book;
+                  const canDelete = isAdmin || (choice.addedBy?.id === currentUser?.id);
+                  const isDeleting = deletingChoiceId === choice.id;
                   return (
-                    <div key={choice.id} className="rounded-lg border border-rose-200 p-3">
+                    <div key={choice.id} className="relative rounded-lg border border-rose-200 p-3">
+                      {canDelete && !isDeleting && (
+                        <button
+                          onClick={() => setDeletingChoiceId(choice.id)}
+                          disabled={deleteRec.isPending}
+                          className="absolute right-2 top-2 rounded bg-rose-100 p-1.5 text-lg leading-none text-rose-700 hover:bg-rose-200"
+                          title="Delete recommendation"
+                        >
+                          ×
+                        </button>
+                      )}
+                      {isDeleting && (
+                        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-lg bg-white/95 p-3">
+                          <p className="mb-3 text-sm font-medium text-rose-800">
+                            Delete this recommendation?
+                          </p>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => {
+                                deleteRec.mutate({
+                                  readingRoundId: round.id,
+                                  choiceId: choice.id,
+                                });
+                              }}
+                              disabled={deleteRec.isPending}
+                              className="rounded bg-rose-600 px-3 py-1 text-sm text-white hover:bg-rose-700"
+                            >
+                              {deleteRec.isPending ? "Deleting..." : "Delete"}
+                            </button>
+                            <button
+                              onClick={() => setDeletingChoiceId(null)}
+                              disabled={deleteRec.isPending}
+                              className="rounded border border-rose-300 bg-white px-3 py-1 text-sm text-rose-700 hover:bg-rose-50"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      )}
                       <BookCover
                         title={book.title}
                         author={book.authors}
@@ -212,24 +277,71 @@ export function ReadingRoundDisplay({
             </div>
 
             {isAdmin && (
-              <div className="flex flex-wrap gap-3">
-                <button
-                  onClick={() => {
-                    const title = window.prompt("Enter book title:");
-                    const author = window.prompt("Enter author name:");
-                    if (title && author && round) {
-                      addUserRec.mutate({
-                        readingRoundId: round.id,
-                        title: title.trim(),
-                        author: author.trim(),
-                      });
-                    }
-                  }}
-                  disabled={addUserRec.isPending}
-                  className="cute-button-outline"
-                >
-                  + Add Recommendation
-                </button>
+              <div className="space-y-3">
+                {!showAddForm ? (
+                  <button
+                    onClick={() => setShowAddForm(true)}
+                    className="cute-button-outline"
+                  >
+                    + Add Recommendation
+                  </button>
+                ) : (
+                  <div className="rounded-lg border border-rose-200 bg-rose-50/50 p-4">
+                    <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <div>
+                        <label className="mb-1 block text-sm font-medium text-rose-800">
+                          Book Title
+                        </label>
+                        <input
+                          type="text"
+                          value={newBookTitle}
+                          onChange={(e) => setNewBookTitle(e.target.value)}
+                          className="w-full rounded-xl border border-rose-200 bg-white px-3 py-2 outline-none focus:border-rose-300"
+                          placeholder="Enter book title"
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-sm font-medium text-rose-800">
+                          Author
+                        </label>
+                        <input
+                          type="text"
+                          value={newBookAuthor}
+                          onChange={(e) => setNewBookAuthor(e.target.value)}
+                          className="w-full rounded-xl border border-rose-200 bg-white px-3 py-2 outline-none focus:border-rose-300"
+                          placeholder="Enter author name"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          if (newBookTitle.trim() && newBookAuthor.trim() && round) {
+                            addUserRec.mutate({
+                              readingRoundId: round.id,
+                              title: newBookTitle.trim(),
+                              author: newBookAuthor.trim(),
+                            });
+                          }
+                        }}
+                        disabled={addUserRec.isPending || !newBookTitle.trim() || !newBookAuthor.trim()}
+                        className="cute-button"
+                      >
+                        {addUserRec.isPending ? "Adding..." : "Add"}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowAddForm(false);
+                          setNewBookTitle("");
+                          setNewBookAuthor("");
+                        }}
+                        className="cute-button-outline"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
                 <button
                   onClick={() => startVote.mutate({ readingRoundId: round.id })}
                   disabled={startVote.isPending}
@@ -257,7 +369,7 @@ export function ReadingRoundDisplay({
     const isClosed = poll.status === "CLOSED" || endedByTime || poll.allVoted;
 
     if (isClosed) {
-      // Vote is done, show winner and allow admin to start reading
+      // Vote is done, show winner briefly before transitioning to reading
       const winnerChoice = poll.choices.find((c: any) => c.book.id === poll.winnerBookId) ?? poll.choices[0];
 
       return (
@@ -285,19 +397,8 @@ export function ReadingRoundDisplay({
               </div>
             </div>
           </div>
-
-          {isAdmin && (
-            <button
-              onClick={() => startReading.mutate({ readingRoundId: round.id })}
-              disabled={startReading.isPending}
-              className="cute-button"
-            >
-              Start Reading
-            </button>
-          )}
-
-          {!isAdmin && (
-            <p className="text-rose-700/80">Waiting for admin to start reading...</p>
+          {startReading.isPending && (
+            <p className="text-rose-700/80">Starting reading round...</p>
           )}
         </section>
       );
@@ -439,22 +540,39 @@ export function ReadingRoundDisplay({
 
         {isAdmin && (
           <div className="mt-6">
-            <button
-              onClick={() => {
-                if (
-                  confirm(
-                    `Finish this round? This will end the review period. ${reviewCount} people have reviewed it.`,
-                  )
-                ) {
-                  finishReading.mutate({ readingRoundId: round.id });
-                }
-              }}
-              disabled={finishReading.isPending}
-              className="cute-button-outline"
-              title={`This will end the review period. ${reviewCount} people have reviewed it.`}
-            >
-              {finishReading.isPending ? "Finishing..." : "Finished Reading"}
-            </button>
+            {!showFinishConfirm ? (
+              <button
+                onClick={() => setShowFinishConfirm(true)}
+                disabled={finishReading.isPending}
+                className="cute-button-outline"
+              >
+                Finished Reading
+              </button>
+            ) : (
+              <div className="rounded-lg border border-rose-200 bg-rose-50/50 p-4">
+                <p className="mb-3 text-sm font-medium text-rose-800">
+                  Finish this round? This will end the review period. {reviewCount} people have reviewed it.
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      finishReading.mutate({ readingRoundId: round.id });
+                    }}
+                    disabled={finishReading.isPending}
+                    className="rounded bg-rose-600 px-4 py-2 text-sm text-white hover:bg-rose-700"
+                  >
+                    {finishReading.isPending ? "Finishing..." : "Finish Round"}
+                  </button>
+                  <button
+                    onClick={() => setShowFinishConfirm(false)}
+                    disabled={finishReading.isPending}
+                    className="rounded border border-rose-300 bg-white px-4 py-2 text-sm text-rose-700 hover:bg-rose-50"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </section>
