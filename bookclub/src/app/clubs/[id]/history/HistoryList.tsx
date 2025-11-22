@@ -19,13 +19,19 @@ type HistoryItem = {
   myReview: string | null;
 };
 
-export function HistoryList({ history, clubId }: { history: HistoryItem[]; clubId: string }) {
+export function HistoryList({ history: initialHistory, clubId }: { history: HistoryItem[]; clubId: string }) {
   const utils = api.useUtils();
   const [generatingFor, setGeneratingFor] = useState<string | null>(null);
+  
+  // Use client-side query for reactive updates
+  const { data: history = initialHistory } = api.clubs.history.useQuery(
+    { id: clubId },
+    { initialData: initialHistory }
+  );
 
   const generateReview = api.clubs.generateGroupReview.useMutation({
-    onSuccess: () => {
-      utils.clubs.history.invalidate({ id: clubId });
+    onSuccess: async () => {
+      await utils.clubs.history.refetch({ id: clubId });
       setGeneratingFor(null);
     },
     onError: () => {

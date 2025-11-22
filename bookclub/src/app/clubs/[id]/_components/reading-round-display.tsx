@@ -43,6 +43,7 @@ export function ReadingRoundDisplay({
   const [savedReviewText, setSavedReviewText] = useState<string>("");
   const [isEditingReview, setIsEditingReview] = useState(false);
   const [reviewSaved, setReviewSaved] = useState<null | "ok" | "error">(null);
+  const [isClearingReview, setIsClearingReview] = useState(false);
   const [hasShownConfetti, setHasShownConfetti] = useState(false);
   const [hasStartedReading, setHasStartedReading] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -52,14 +53,14 @@ export function ReadingRoundDisplay({
   const [showFinishConfirm, setShowFinishConfirm] = useState(false);
 
   const createRound = api.readingRounds.createRoundWithRecommendations.useMutation({
-    onSuccess: () => {
-      utils.readingRounds.getCurrentRound.invalidate({ groupId });
+    onSuccess: async () => {
+      await utils.readingRounds.getCurrentRound.refetch({ groupId });
     },
   });
 
   const addUserRec = api.readingRounds.addUserRecommendation.useMutation({
-    onSuccess: () => {
-      utils.readingRounds.getCurrentRound.invalidate({ groupId });
+    onSuccess: async () => {
+      await utils.readingRounds.getCurrentRound.refetch({ groupId });
       setNewBookTitle("");
       setNewBookAuthor("");
       setShowAddForm(false);
@@ -67,61 +68,63 @@ export function ReadingRoundDisplay({
   });
 
   const deleteRec = api.readingRounds.deleteRecommendation.useMutation({
-    onSuccess: () => {
-      utils.readingRounds.getCurrentRound.invalidate({ groupId });
+    onSuccess: async () => {
+      await utils.readingRounds.getCurrentRound.refetch({ groupId });
       setDeletingChoiceId(null);
     },
   });
 
   const startVote = api.readingRounds.startVote.useMutation({
-    onSuccess: () => {
-      utils.readingRounds.getCurrentRound.invalidate({ groupId });
+    onSuccess: async () => {
+      await utils.readingRounds.getCurrentRound.refetch({ groupId });
     },
   });
 
   const submitVote = api.readingRounds.submitVote.useMutation({
-    onSuccess: () => {
-      utils.readingRounds.getCurrentRound.invalidate({ groupId });
+    onSuccess: async () => {
+      await utils.readingRounds.getCurrentRound.refetch({ groupId });
       // Keep selectedChoiceId so the green highlight persists
     },
   });
 
   const startReading = api.readingRounds.startReading.useMutation({
-    onSuccess: () => {
-      utils.readingRounds.getCurrentRound.invalidate({ groupId });
+    onSuccess: async () => {
       setHasStartedReading(true);
+      await utils.readingRounds.getCurrentRound.refetch({ groupId });
     },
   });
 
   const submitRating = api.readingRounds.submitRating.useMutation({
-    onSuccess: () => {
-      utils.readingRounds.getCurrentRound.invalidate({ groupId });
+    onSuccess: async () => {
+      await utils.readingRounds.getCurrentRound.refetch({ groupId });
     },
   });
 
   const submitReview = api.readingRounds.submitReview.useMutation({
-    onSuccess: (_, variables) => {
-      utils.readingRounds.getCurrentRound.invalidate({ groupId });
+    onSuccess: async (_, variables) => {
       setSavedReviewText(variables.reviewText);
       setReviewSaved("ok");
+      setIsClearingReview(false);
       // If text was cleared, stay in edit mode (no text to display)
       if (!variables.reviewText || variables.reviewText.trim().length === 0) {
         setIsEditingReview(true);
       } else {
         setIsEditingReview(false);
       }
+      await utils.readingRounds.getCurrentRound.refetch({ groupId });
       setTimeout(() => setReviewSaved(null), 1500);
     },
     onError: () => {
       setReviewSaved("error");
+      setIsClearingReview(false);
       setTimeout(() => setReviewSaved(null), 1500);
     },
   });
 
   const finishReading = api.readingRounds.finishReading.useMutation({
-    onSuccess: () => {
-      utils.readingRounds.getCurrentRound.invalidate({ groupId });
+    onSuccess: async () => {
       setShowFinishConfirm(false);
+      await utils.readingRounds.getCurrentRound.refetch({ groupId });
     },
   });
 
@@ -150,10 +153,10 @@ export function ReadingRoundDisplay({
         
         // Automatically start reading after a short delay (to let confetti show)
         setTimeout(() => {
-          if (round.id && !hasStartedReading) {
+          if (round.id && !hasStartedReading && !startReading.isPending) {
             startReading.mutate({ readingRoundId: round.id });
           }
-        }, 1500);
+        }, 800);
       }
     }
   }, [round, hasShownConfetti, hasStartedReading, startReading]);
@@ -417,7 +420,7 @@ export function ReadingRoundDisplay({
               </div>
             </div>
           </div>
-          {startReading.isPending && (
+          {(startReading.isPending || (round.status === "VOTING" && isClosed && round.poll?.winnerBookId)) && (
             <p className="text-rose-700/80">Starting reading round...</p>
           )}
         </section>
@@ -560,6 +563,7 @@ export function ReadingRoundDisplay({
                     type="button"
                     onClick={async () => {
                       setReviewSaved(null);
+                      setIsClearingReview(true);
                       setReviewText("");
                       setSavedReviewText("");
                       submitReview.mutate({ readingRoundId: round.id, reviewText: "" });
@@ -567,7 +571,7 @@ export function ReadingRoundDisplay({
                     disabled={submitReview.isPending}
                     className="inline-flex items-center justify-center rounded-full border border-rose-300 bg-white/70 px-4 py-2 text-sm font-medium text-rose-700 shadow-sm transition hover:bg-rose-50 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {submitReview.isPending ? "Clearing…" : "Clear"}
+                    {submitReview.isPending && isClearingReview ? "Clearing…" : "Clear"}
                   </button>
                   {reviewSaved === "ok" && <span className="text-sm text-emerald-700">Saved</span>}
                   {reviewSaved === "error" && <span className="text-sm text-rose-700">Failed to save</span>}
