@@ -13,7 +13,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
   return (
     <main className="mx-auto max-w-3xl px-6 py-10">
       <header className="mb-6">
-        <h1 className="text-3xl font-extrabold text-rose-800">Your Profile</h1>
+        <h1 className="text-3xl font-extrabold text-rose-800">{profile?.name ?? "Your Profile"}</h1>
         <p className="text-rose-700/70">Share what you love to read and add past favorites.</p>
       </header>
 
@@ -47,10 +47,15 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
             type="file"
             name="file"
             accept=".csv,text/csv"
-            className="block w-full text-sm text-rose-800 file:mr-4 file:rounded-md file:border-0 file:bg-rose-100 file:px-3 file:py-2 file:text-rose-800 hover:file:bg-rose-200"
+            className="block w-full text-xs text-rose-500/30 file:mr-4 file:rounded-md file:border-0 file:bg-rose-100 file:px-3 file:py-2 file:text-rose-800 file:text-sm file:cursor-pointer"
             required
           />
-          <button type="submit" className="cute-button">Upload CSV</button>
+          <button
+            type="submit"
+            className="inline-flex items-center justify-center rounded-full border border-rose-400 bg-rose-400 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-rose-500 hover:border-rose-500 active:scale-[0.99]"
+          >
+            Upload CSV
+          </button>
         </form>
 
         {profile?.goodreadsImports?.[0] && (

@@ -27,6 +27,7 @@ export const userRouter = createTRPCRouter({
         image: true,
         avatarUrl: true,
         profileText: true,
+        createdAt: true,
         goodreadsImports: {
           orderBy: { createdAt: "desc" },
           take: 1,
@@ -35,6 +36,31 @@ export const userRouter = createTRPCRouter({
       },
     });
     return user;
+  }),
+
+  getProfileStatus: publicProcedure.query(async ({ ctx }) => {
+    const userId = await getOrCreateCurrentUserId(ctx);
+    const user = await ctx.db.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        profileText: true,
+        createdAt: true,
+      },
+    });
+
+    if (!user) {
+      return { isComplete: false, isFirstTime: false };
+    }
+
+    const isComplete = Boolean(user.profileText && user.profileText.trim().length > 0);
+    
+    // Consider user "first-time" if account was created less than 5 minutes ago
+    // and profile is not complete
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+    const isFirstTime = !isComplete && new Date(user.createdAt) > fiveMinutesAgo;
+
+    return { isComplete, isFirstTime };
   }),
 
   updateProfile: publicProcedure

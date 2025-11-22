@@ -1,8 +1,19 @@
 import Link from "next/link";
+
 import { api } from "~/trpc/server";
+import { auth } from "~/server/auth";
+import { isProfileComplete } from "~/server/auth/profile-helpers";
+
+import { ProfileSetupBanner } from "../_components/profile-setup-banner";
 
 export default async function ClubsPage() {
+  const session = await auth();
   const clubs = await api.clubs.list();
+
+  // Check if profile is incomplete (for returning users banner)
+  const profileComplete = session?.user?.id
+    ? await isProfileComplete(session.user.id)
+    : true;
 
   return (
     <main className="mx-auto max-w-4xl px-6 py-10">
@@ -15,6 +26,9 @@ export default async function ClubsPage() {
           <Link href="/clubs/new" className="cute-button text-base">+ Create Club</Link>
         </div>
       </header>
+
+      {/* Show banner for returning users with incomplete profiles */}
+      {!profileComplete && <ProfileSetupBanner />}
 
       {clubs.length === 0 ? (
         <section className="cute-card">

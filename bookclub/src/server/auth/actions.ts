@@ -8,6 +8,7 @@ import { AuthError } from "next-auth";
 import { db } from "~/server/db";
 import { signIn, signOut } from "~/server/auth";
 import { auth } from "./index";
+import { isProfileComplete, isFirstTimeUser } from "./profile-helpers";
 
 export async function signUpWithEmailPassword(
   email: string,
@@ -43,6 +44,16 @@ export async function signUpWithEmailPassword(
       redirect: false,
     });
     revalidatePath("/");
+    
+    // Check if this is a first-time user and redirect to profile setup
+    const session = await auth();
+    if (session?.user?.id) {
+      const isFirstTime = await isFirstTimeUser(session.user.id);
+      if (isFirstTime) {
+        redirect("/profile/setup");
+      }
+    }
+    
     redirect("/clubs");
   } catch (error) {
     if (error instanceof AuthError) {
@@ -60,6 +71,16 @@ export async function signInWithEmailPassword(email: string, password: string) {
       redirect: false,
     });
     revalidatePath("/");
+    
+    // Check if this is a first-time user and redirect to profile setup
+    const session = await auth();
+    if (session?.user?.id) {
+      const isFirstTime = await isFirstTimeUser(session.user.id);
+      if (isFirstTime) {
+        redirect("/profile/setup");
+      }
+    }
+    
     redirect("/clubs");
   } catch (error) {
     if (error instanceof AuthError) {

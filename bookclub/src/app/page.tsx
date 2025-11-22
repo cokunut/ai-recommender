@@ -1,14 +1,22 @@
 import { redirect } from "next/navigation";
 
 import { auth } from "~/server/auth";
+import { isProfileComplete, isFirstTimeUser } from "~/server/auth/profile-helpers";
 
 import { EmailPasswordForm } from "./auth/email-password-form";
 
 export default async function Home() {
   const session = await auth();
 
-  // Redirect logged-in users to /clubs
-  if (session?.user) {
+  // Redirect logged-in users
+  if (session?.user?.id) {
+    // Check if first-time user (recent account, incomplete profile) → redirect to setup
+    const isFirstTime = await isFirstTimeUser(session.user.id);
+    if (isFirstTime) {
+      redirect("/profile/setup");
+    }
+    
+    // Otherwise redirect to /clubs
     redirect("/clubs");
   }
 

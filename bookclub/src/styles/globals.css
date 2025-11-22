@@ -29,4 +29,17 @@
   .cute-button-outline {
     @apply inline-flex items-center justify-center rounded-full border border-rose-300 bg-white/70 px-4 py-2 text-rose-700 shadow-sm transition hover:bg-white;
   }
+
+  /* File input button hover styling */
+  input[type="file"]::file-selector-button {
+    transition: background-color 0.15s ease-in-out;
+  }
+
+  input[type="file"]::file-selector-button:hover {
+    background-color: rgb(254 242 242); /* rose-200 */
+  }
+
+  input[type="file"]::file-selector-button:active {
+    background-color: rgb(253 232 232); /* rose-300 */
+  }
 }
