@@ -14,13 +14,12 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
     <main className="mx-auto max-w-3xl px-6 py-10">
       <header className="mb-6">
         <h1 className="text-3xl font-extrabold text-rose-800">{profile?.name ?? "Your Profile"}</h1>
-        <p className="text-rose-700/70">Share what you love to read and add past favorites.</p>
+        <p className="text-rose-700/70">Manage your profile and reading preferences.</p>
       </header>
-
       <section className="cute-card mb-6">
         <h2 className="mb-3 text-xl font-semibold text-rose-800">Reading Preferences</h2>
         <p className="mb-4 text-sm text-rose-700/80">
-          Tell us what you enjoy reading and list a few books you loved.
+          Share your favorite genres, authors, and books.
         </p>
         <ProfileForm initialText={profile?.profileText ?? ""} />
       </section>

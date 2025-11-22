@@ -166,10 +166,12 @@ export const authConfig = {
     },
     
     async redirect({ url, baseUrl }) {
-      // Allow relative callback URLs
+      // After OAuth sign-in, always redirect to home page
+      // The home page will check setup status and redirect accordingly
       if (url.startsWith("/")) return `${baseUrl}${url}`;
       // Allow callback URLs on the same origin
       if (new URL(url).origin === baseUrl) return url;
+      // Default: redirect to home page (will check setup status there)
       return baseUrl;
     },
   },

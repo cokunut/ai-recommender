@@ -8,7 +8,7 @@ import { AuthError } from "next-auth";
 import { db } from "~/server/db";
 import { signIn, signOut } from "~/server/auth";
 import { auth } from "./index";
-import { isProfileComplete, isFirstTimeUser } from "./profile-helpers";
+import { isSetupComplete, isFirstTimeUser } from "./profile-helpers";
 
 export async function signUpWithEmailPassword(
   email: string,
@@ -36,26 +36,61 @@ export async function signUpWithEmailPassword(
     },
   });
 
-  // Sign in the user
+    // Sign in the user
   try {
-    await signIn("credentials", {
+    const result = await signIn("credentials", {
       email,
       password,
       redirect: false,
     });
-    revalidatePath("/");
     
-    // Check if this is a first-time user and redirect to profile setup
-    const session = await auth();
-    if (session?.user?.id) {
-      const isFirstTime = await isFirstTimeUser(session.user.id);
-      if (isFirstTime) {
-        redirect("/profile/setup");
-      }
+    // If signIn failed, result will contain error information
+    if (result?.error) {
+      throw new Error(result.error === "CredentialsSignin" ? "Invalid email or password" : "Failed to sign in");
     }
     
+    // Revalidate to ensure session is fresh
+    revalidatePath("/");
+    
+    // Wait for session to be available (retry up to 5 times with small delay)
+    let session = await auth();
+    let retries = 0;
+    const maxRetries = 5;
+    
+    while (!session?.user?.id && retries < maxRetries) {
+      await new Promise((resolve) => setTimeout(resolve, 100)); // Wait 100ms
+      session = await auth();
+      retries++;
+    }
+    
+    if (!session?.user?.id) {
+      // Session still not available after retries, redirect to home and let it handle routing
+      redirect("/");
+      return;
+    }
+    
+    // Check if first-time user → redirect to setup (shows welcome view)
+    const isFirstTime = await isFirstTimeUser(session.user.id);
+    if (isFirstTime) {
+      redirect("/profile/setup");
+      return;
+    }
+    
+    // Returning user - redirect to clubs (they can use Complete Profile button if needed)
     redirect("/clubs");
   } catch (error) {
+    // Check if it's a Next.js redirect (not an error)
+    if (
+      error &&
+      typeof error === "object" &&
+      "digest" in error &&
+      typeof error.digest === "string" &&
+      error.digest.startsWith("NEXT_REDIRECT")
+    ) {
+      // Let redirect propagate
+      throw error;
+    }
+    
     if (error instanceof AuthError) {
       throw new Error("Failed to sign in after registration");
     }
@@ -65,24 +100,59 @@ export async function signUpWithEmailPassword(
 
 export async function signInWithEmailPassword(email: string, password: string) {
   try {
-    await signIn("credentials", {
+    const result = await signIn("credentials", {
       email,
       password,
       redirect: false,
     });
-    revalidatePath("/");
     
-    // Check if this is a first-time user and redirect to profile setup
-    const session = await auth();
-    if (session?.user?.id) {
-      const isFirstTime = await isFirstTimeUser(session.user.id);
-      if (isFirstTime) {
-        redirect("/profile/setup");
-      }
+    // If signIn failed, result will contain error information
+    if (result?.error) {
+      throw new Error(result.error === "CredentialsSignin" ? "Invalid email or password" : "Failed to sign in");
     }
     
+    // Revalidate to ensure session is fresh
+    revalidatePath("/");
+    
+    // Wait for session to be available (retry up to 5 times with small delay)
+    let session = await auth();
+    let retries = 0;
+    const maxRetries = 5;
+    
+    while (!session?.user?.id && retries < maxRetries) {
+      await new Promise((resolve) => setTimeout(resolve, 100)); // Wait 100ms
+      session = await auth();
+      retries++;
+    }
+    
+    if (!session?.user?.id) {
+      // Session still not available after retries, redirect to home and let it handle routing
+      redirect("/");
+      return;
+    }
+    
+    // Check if first-time user → redirect to setup (shows welcome view)
+    const isFirstTime = await isFirstTimeUser(session.user.id);
+    if (isFirstTime) {
+      redirect("/profile/setup");
+      return;
+    }
+    
+    // Returning user - redirect to clubs (they can use Complete Profile button if needed)
     redirect("/clubs");
   } catch (error) {
+    // Check if it's a Next.js redirect (not an error)
+    if (
+      error &&
+      typeof error === "object" &&
+      "digest" in error &&
+      typeof error.digest === "string" &&
+      error.digest.startsWith("NEXT_REDIRECT")
+    ) {
+      // Let redirect propagate
+      throw error;
+    }
+    
     if (error instanceof AuthError) {
       throw new Error("Invalid email or password");
     }

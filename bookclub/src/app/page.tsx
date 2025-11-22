@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { auth } from "~/server/auth";
-import { isProfileComplete, isFirstTimeUser } from "~/server/auth/profile-helpers";
+import { isFirstTimeUser } from "~/server/auth/profile-helpers";
 
 import { EmailPasswordForm } from "./auth/email-password-form";
 
@@ -10,13 +10,13 @@ export default async function Home() {
 
   // Redirect logged-in users
   if (session?.user?.id) {
-    // Check if first-time user (recent account, incomplete profile) → redirect to setup
+    // Check if first-time user → redirect to setup (shows welcome view)
     const isFirstTime = await isFirstTimeUser(session.user.id);
     if (isFirstTime) {
       redirect("/profile/setup");
     }
     
-    // Otherwise redirect to /clubs
+    // Returning user - redirect to clubs
     redirect("/clubs");
   }
 
@@ -69,7 +69,7 @@ export default async function Home() {
             action={async () => {
               "use server";
               const { signIn } = await import("~/server/auth");
-              await signIn("google");
+              await signIn("google", { redirectTo: "/" });
             }}
             className="w-full"
           >
