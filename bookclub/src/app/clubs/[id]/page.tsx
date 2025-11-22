@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { api } from "~/trpc/server";
-import { JoinClubButton } from "./JoinClubButton";
-import { ClubRecommendations } from "./ClubRecommendations";
+import { JoinClubButton } from "./_components/join-club-button";
+import { ClubRecommendations } from "./_components/club-recommendations";
 
 export default async function ClubDetailsPage({ params }: { params: { id: string } }) {
   const { id } = params;

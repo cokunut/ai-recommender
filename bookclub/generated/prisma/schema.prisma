@@ -15,18 +15,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Post {
-  id        Int      @id @default(autoincrement())
-  name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  createdBy   User   @relation(fields: [createdById], references: [id])
-  createdById String
-
-  @@index([name])
-}
-
 // Necessary for Next auth
 model Account {
   id                       String  @id @default(cuid())
@@ -60,13 +48,13 @@ model User {
   name             String?
   email            String?           @unique
   emailVerified    DateTime?
+  password         String?
   image            String?
   avatarUrl        String?
   profileText      String?
   createdAt        DateTime          @default(now())
   accounts         Account[]
   sessions         Session[]
-  posts            Post[]
   groupsCreated    Group[]           @relation("GroupCreatedBy")
   memberships      GroupMember[]
   pollsCreated     Poll[]            @relation("PollCreatedBy")

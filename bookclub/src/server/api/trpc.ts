@@ -13,6 +13,7 @@ import { ZodError } from "zod";
 
 import { auth } from "~/server/auth";
 import { db } from "~/server/db";
+import { env } from "~/env";
 
 /**
  * 1. CONTEXT
@@ -87,8 +88,9 @@ export const createTRPCRouter = t.router;
 const timingMiddleware = t.middleware(async ({ next, path }) => {
   const start = Date.now();
 
-  if (t._config.isDev) {
-    // artificial delay in dev
+  // Add artificial delay only if enabled via env var (defaults to false)
+  if (t._config.isDev && env.TRPC_ARTIFICIAL_DELAY) {
+    // artificial delay in dev to simulate network latency
     const waitMs = Math.floor(Math.random() * 400) + 100;
     await new Promise((resolve) => setTimeout(resolve, waitMs));
   }

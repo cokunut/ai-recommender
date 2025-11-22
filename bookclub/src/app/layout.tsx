@@ -3,6 +3,8 @@ import "~/styles/globals.css";
 import { type Metadata } from "next";
 import { Geist } from "next/font/google";
 
+import { LayoutWrapper } from "./_components/layout/layout-wrapper";
+import { Sidebar } from "./_components/layout/sidebar";
 import { TRPCReactProvider } from "~/trpc/react";
 
 export const metadata: Metadata = {
@@ -22,7 +24,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geist.variable}`}>
       <body className="min-h-screen bg-gradient-to-b from-rose-50 via-pink-50 to-fuchsia-50 text-rose-900">
-        <TRPCReactProvider>{children}</TRPCReactProvider>
+        <TRPCReactProvider>
+          <Sidebar />
+          <LayoutWrapper>{children}</LayoutWrapper>
+        </TRPCReactProvider>
       </body>
     </html>
   );

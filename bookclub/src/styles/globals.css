@@ -20,6 +20,9 @@
   .cute-card {
     @apply rounded-3xl bg-white/80 p-6 shadow-[0_8px_30px_rgb(0,0,0,0.06)] backdrop-blur;
   }
+  .cute-card-gradient {
+    @apply rounded-3xl bg-gradient-to-b from-rose-50 to-white p-8 shadow-[0_8px_30px_rgb(0,0,0,0.06)] backdrop-blur;
+  }
   .cute-button {
     @apply inline-flex items-center justify-center rounded-full bg-gradient-to-r from-rose-400 to-fuchsia-400 px-6 py-3 font-medium text-white shadow-md transition hover:from-rose-500 hover:to-fuchsia-500 active:scale-[0.99];
   }

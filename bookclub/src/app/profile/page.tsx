@@ -1,17 +1,17 @@
-import Link from "next/link";
 import { api } from "~/trpc/server";
-import { ProfileForm } from "./profile-form";
 
-export default async function ProfilePage({ searchParams }: { searchParams?: { import?: string } }) {
+import { DeleteAccountButton } from "./_components/delete-account-button";
+import { ProfileForm } from "./_components/profile-form";
+import { logout } from "~/server/auth/actions";
+
+export default async function ProfilePage({ searchParams }: { searchParams: Promise<{ import?: string }> }) {
   const profile = await api.user.getProfile();
 
-  const importStatus = searchParams?.import;
+  const resolvedSearchParams = await searchParams;
+  const importStatus = resolvedSearchParams?.import;
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-10">
-      <nav className="mb-4 text-sm text-rose-700/70">
-        <Link href="/">← Home</Link>
-      </nav>
       <header className="mb-6">
         <h1 className="text-3xl font-extrabold text-rose-800">Your Profile</h1>
         <p className="text-rose-700/70">Share what you love to read and add past favorites.</p>
@@ -25,7 +25,7 @@ export default async function ProfilePage({ searchParams }: { searchParams?: { i
         <ProfileForm initialText={profile?.profileText ?? ""} />
       </section>
 
-      <section className="cute-card">
+      <section className="cute-card mb-6">
         <h2 className="mb-3 text-xl font-semibold text-rose-800">Import from Goodreads</h2>
         <ol className="mb-4 list-decimal space-y-1 pl-5 text-sm text-rose-700/90">
           <li>
@@ -58,6 +58,25 @@ export default async function ProfilePage({ searchParams }: { searchParams?: { i
             Last import: {new Date(profile.goodreadsImports[0]!.createdAt as unknown as string).toLocaleString()} ({profile.goodreadsImports[0]!.status})
           </p>
         )}
+      </section>
+
+      {/* Delete Account and Logout */}
+      <section className="cute-card">
+        <h2 className="mb-4 text-xl font-semibold text-rose-800">Account Actions</h2>
+        <div className="flex flex-col gap-3">
+          {/* Logout button */}
+          <form action={logout}>
+            <button
+              type="submit"
+              className="w-full rounded-full border border-rose-300 bg-white/70 px-6 py-3 text-base font-medium text-rose-700 shadow-sm transition hover:bg-rose-50 hover:border-rose-400 hover:shadow-md cursor-pointer active:scale-[0.99]"
+            >
+              Logout
+            </button>
+          </form>
+
+          {/* Delete Account button */}
+          <DeleteAccountButton />
+        </div>
       </section>
     </main>
   );

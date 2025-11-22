@@ -15,6 +15,11 @@ export const env = createEnv({
     AUTH_GOOGLE_SECRET: z.string(),
     DATABASE_URL: z.string().url(),
     GROQ_API_KEY: z.string().optional(),
+    TRPC_ARTIFICIAL_DELAY: z
+      .string()
+      .optional()
+      .default("false")
+      .transform((val) => val === "true" || val === "1"),
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
@@ -39,6 +44,7 @@ export const env = createEnv({
     AUTH_GOOGLE_SECRET: process.env.AUTH_GOOGLE_SECRET,
     DATABASE_URL: process.env.DATABASE_URL,
     GROQ_API_KEY: process.env.GROQ_API_KEY,
+    TRPC_ARTIFICIAL_DELAY: process.env.TRPC_ARTIFICIAL_DELAY,
     NODE_ENV: process.env.NODE_ENV,
   },
   /**

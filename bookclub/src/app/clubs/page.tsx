@@ -12,7 +12,6 @@ export default async function ClubsPage() {
           <p className="text-rose-700/70">Browse and manage your book clubs.</p>
         </div>
         <div className="flex items-center gap-3">
-          <Link href="/profile" className="cute-button-outline text-base">Profile</Link>
           <Link href="/clubs/new" className="cute-button text-base">+ Create Club</Link>
         </div>
       </header>

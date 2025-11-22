@@ -79,7 +79,7 @@ export function ClubRecommendations({ groupId }: { groupId: string }) {
               <div key={choice.id} className="rounded-lg border border-rose-200 p-3">
                 <BookCover title={book.title} author={book.authors} coverUrl={book.coverImageUrl} />
                 <h3 className="mb-1 font-semibold text-rose-900">{book.title}</h3>
-                <p className="mb-3 text-sm text-rose-700/80">Why recommended: Tailored to your club’s tastes. (placeholder)</p>
+                <p className="mb-3 text-sm text-rose-700/80">Why recommended: Tailored to your club's tastes. (placeholder)</p>
 
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -172,3 +172,4 @@ function BookCover({ title, author, coverUrl }: { title: string; author: string;
     </div>
   );
 }
+
