@@ -86,6 +86,7 @@ export const clubsRouter = createTRPCRouter({
       });
       return members.map((m: any) => ({
         id: m.id,
+        userId: m.userId,
         role: m.role,
         joinedAt: m.joinedAt,
         user: {
@@ -112,6 +113,78 @@ export const clubsRouter = createTRPCRouter({
         create: { groupId: input.id, userId, role: "MEMBER" },
       });
       return membership;
+    }),
+
+  // Get current user's role in a club
+  myRole: publicProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const userId = await getOrCreateCurrentUserId(ctx);
+      const membership = await ctx.db.groupMember.findUnique({
+        where: { groupId_userId: { groupId: input.id, userId } },
+      });
+      return membership?.role ?? null;
+    }),
+
+  // Delete a club (only owner/admin can delete)
+  delete: publicProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const userId = await getOrCreateCurrentUserId(ctx);
+      const membership = await ctx.db.groupMember.findUnique({
+        where: { groupId_userId: { groupId: input.id, userId } },
+      });
+      if (!membership || (membership.role !== "OWNER" && membership.role !== "ADMIN")) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Only owner or admin can delete the club" });
+      }
+      await ctx.db.group.delete({ where: { id: input.id } });
+      return { ok: true };
+    }),
+
+  // Leave a club (must transfer admin if user is owner/admin)
+  leave: publicProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        transferToUserId: z.string().optional(), // Required if user is OWNER or ADMIN
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const userId = await getOrCreateCurrentUserId(ctx);
+      const membership = await ctx.db.groupMember.findUnique({
+        where: { groupId_userId: { groupId: input.id, userId } },
+      });
+      if (!membership) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Not a member of this club" });
+      }
+
+      // If user is OWNER or ADMIN, they must transfer to another user
+      if (membership.role === "OWNER" || membership.role === "ADMIN") {
+        if (!input.transferToUserId) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Must designate another user to be admin before leaving",
+          });
+        }
+        // Verify the target user is a member
+        const targetMembership = await ctx.db.groupMember.findUnique({
+          where: { groupId_userId: { groupId: input.id, userId: input.transferToUserId } },
+        });
+        if (!targetMembership) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Target user is not a member" });
+        }
+        // Transfer the role
+        await ctx.db.groupMember.update({
+          where: { groupId_userId: { groupId: input.id, userId: input.transferToUserId } },
+          data: { role: membership.role === "OWNER" ? "OWNER" : "ADMIN" },
+        });
+      }
+
+      // Remove the user's membership
+      await ctx.db.groupMember.delete({
+        where: { groupId_userId: { groupId: input.id, userId } },
+      });
+      return { ok: true };
     }),
 
   // Create or return an active 24h poll with 3 books

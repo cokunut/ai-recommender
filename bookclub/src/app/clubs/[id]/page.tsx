@@ -2,12 +2,19 @@ import Link from "next/link";
 import { api } from "~/trpc/server";
 import { JoinClubButton } from "./_components/join-club-button";
 import { ClubRecommendations } from "./_components/club-recommendations";
+import { CopyLinkButton } from "./_components/copy-link-button";
+import { ViewHistoryButton } from "./_components/view-history-button";
+import { DeleteClubButton } from "./_components/delete-club-button";
+import { LeaveClubButton } from "./_components/leave-club-button";
 
-export default async function ClubDetailsPage({ params }: { params: { id: string } }) {
-  const { id } = params;
+export default async function ClubDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const group = await api.clubs.byId({ id });
   const isMember = await api.clubs.isMember({ id });
   const members = await api.clubs.members({ id });
+  const userRole = isMember ? await api.clubs.myRole({ id }) : null;
+  const isOwnerOrAdmin = userRole === "OWNER" || userRole === "ADMIN";
+
   return (
     <main className="mx-auto max-w-3xl px-6 py-10">
       <nav className="mb-4 text-sm text-rose-700/70">
@@ -16,7 +23,16 @@ export default async function ClubDetailsPage({ params }: { params: { id: string
       <section className="cute-card">
         <h1 className="mb-2 text-2xl font-bold text-rose-800">{group?.name ?? "Club details"}</h1>
         <p className="text-rose-700/80">{group?.description ?? `club details here (id: ${id})`}</p>
-        {!isMember ? <JoinClubButton groupId={id} /> : null}
+        <div className="mt-4 flex flex-wrap gap-2">
+          {!isMember ? (
+            <JoinClubButton groupId={id} />
+          ) : (
+            <>
+              <CopyLinkButton clubId={id} />
+              <ViewHistoryButton clubId={id} />
+            </>
+          )}
+        </div>
       </section>
       <section className="cute-card mt-6">
         <div className="mb-3 flex items-baseline justify-between">
@@ -47,6 +63,14 @@ export default async function ClubDetailsPage({ params }: { params: { id: string
         )}
       </section>
       {isMember ? <ClubRecommendations groupId={id} /> : null}
+      {isMember ? (
+        <section className="cute-card mt-6">
+          <div className="flex items-center gap-3">
+            <LeaveClubButton clubId={id} userRole={userRole} members={members} />
+            {isOwnerOrAdmin && <DeleteClubButton clubId={id} />}
+          </div>
+        </section>
+      ) : null}
     </main>
   );
 }

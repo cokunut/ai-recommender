@@ -7,8 +7,8 @@ export default function NewClubPage() {
     "use server";
     const name = String(formData.get("name") ?? "").trim();
     const description = String(formData.get("description") ?? "").trim() || undefined;
-    const governanceMode = (formData.get("governanceMode") as string) || "OWNER_ADMIN";
-    const group = await api.clubs.create({ name, description, governanceMode: governanceMode as any });
+    // Governance defaults to OWNER_ADMIN server-side; no UI control needed here
+    const group = await api.clubs.create({ name, description });
     redirect(`/clubs/${group.id}`);
   }
 
@@ -26,30 +26,18 @@ export default function NewClubPage() {
               name="name"
               required
               className="w-full rounded-xl border border-rose-200 bg-white/90 px-3 py-2 outline-none focus:border-rose-300"
-              placeholder="Cozy Fantasy Readers"
+              placeholder="Sunday Sci‑Fi Society"
             />
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-rose-800">Description (optional)</label>
+            <label className="mb-1 block text-sm font-medium text-rose-800">Tell us more about your club (optional)</label>
             <textarea
               name="description"
               rows={3}
               className="w-full rounded-xl border border-rose-200 bg-white/90 px-3 py-2 outline-none focus:border-rose-300"
-              placeholder="We read whimsical fantasy with tea."
+              placeholder="Who is in your group? What do you like to read?"
             />
-          </div>
-
-          <div>
-            <label className="mb-1 block text-sm font-medium text-rose-800">Governance</label>
-            <select
-              name="governanceMode"
-              className="w-full rounded-xl border border-rose-200 bg-white/90 px-3 py-2 outline-none focus:border-rose-300"
-              defaultValue="OWNER_ADMIN"
-            >
-              <option value="OWNER_ADMIN">Owner-admin</option>
-              <option value="ALL_MEMBERS">All members</option>
-            </select>
           </div>
 
           <div className="flex items-center gap-3">
