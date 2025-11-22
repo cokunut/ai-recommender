@@ -40,6 +40,9 @@ export function ReadingRoundDisplay({
   const [selectedChoiceId, setSelectedChoiceId] = useState<string | null>(null);
   const [rating, setRating] = useState<number | null>(null);
   const [reviewText, setReviewText] = useState("");
+  const [savedReviewText, setSavedReviewText] = useState<string>("");
+  const [isEditingReview, setIsEditingReview] = useState(false);
+  const [reviewSaved, setReviewSaved] = useState<null | "ok" | "error">(null);
   const [hasShownConfetti, setHasShownConfetti] = useState(false);
   const [hasStartedReading, setHasStartedReading] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -97,8 +100,21 @@ export function ReadingRoundDisplay({
   });
 
   const submitReview = api.readingRounds.submitReview.useMutation({
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       utils.readingRounds.getCurrentRound.invalidate({ groupId });
+      setSavedReviewText(variables.reviewText);
+      setReviewSaved("ok");
+      // If text was cleared, stay in edit mode (no text to display)
+      if (!variables.reviewText || variables.reviewText.trim().length === 0) {
+        setIsEditingReview(true);
+      } else {
+        setIsEditingReview(false);
+      }
+      setTimeout(() => setReviewSaved(null), 1500);
+    },
+    onError: () => {
+      setReviewSaved("error");
+      setTimeout(() => setReviewSaved(null), 1500);
     },
   });
 
@@ -156,6 +172,10 @@ export function ReadingRoundDisplay({
     }
     if (round?.myReview) {
       setReviewText(round.myReview);
+      setSavedReviewText(round.myReview);
+      setIsEditingReview(false);
+    } else {
+      setIsEditingReview(true);
     }
   }, [round?.myRating, round?.myReview]);
 
@@ -523,18 +543,74 @@ export function ReadingRoundDisplay({
             <label className="mb-2 block text-sm font-medium text-rose-800">
               Review (optional)
             </label>
-            <textarea
-              value={reviewText}
-              onChange={(e) => setReviewText(e.target.value)}
-              onBlur={() => {
-                if (reviewText.trim()) {
-                  submitReview.mutate({ readingRoundId: round.id, reviewText: reviewText.trim() });
-                }
-              }}
-              className="w-full rounded-xl border border-rose-200 bg-white/90 px-3 py-2 outline-none focus:border-rose-300"
-              placeholder="Share your thoughts about this book..."
-              rows={4}
-            />
+            {!isEditingReview && savedReviewText.trim().length > 0 ? (
+              <div className="space-y-3">
+                <div className="rounded-md border border-rose-200 bg-white/60 p-3 text-sm text-rose-900 whitespace-pre-wrap min-h-[80px]">
+                  {savedReviewText}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingReview(true)}
+                    className="inline-flex items-center justify-center rounded-full border border-rose-400 bg-rose-400 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-rose-500 hover:border-rose-500 active:scale-[0.99]"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      setReviewSaved(null);
+                      setReviewText("");
+                      setSavedReviewText("");
+                      submitReview.mutate({ readingRoundId: round.id, reviewText: "" });
+                    }}
+                    disabled={submitReview.isPending}
+                    className="inline-flex items-center justify-center rounded-full border border-rose-300 bg-white/70 px-4 py-2 text-sm font-medium text-rose-700 shadow-sm transition hover:bg-rose-50 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {submitReview.isPending ? "Clearing…" : "Clear"}
+                  </button>
+                  {reviewSaved === "ok" && <span className="text-sm text-emerald-700">Saved</span>}
+                  {reviewSaved === "error" && <span className="text-sm text-rose-700">Failed to save</span>}
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <textarea
+                  value={reviewText}
+                  onChange={(e) => setReviewText(e.target.value)}
+                  className="w-full rounded-md border border-rose-200 bg-white/60 p-3 text-sm text-rose-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-300 resize-none"
+                  placeholder="Share your thoughts about this book..."
+                  rows={4}
+                />
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => {
+                      setReviewSaved(null);
+                      submitReview.mutate({ readingRoundId: round.id, reviewText: reviewText.trim() });
+                    }}
+                    disabled={submitReview.isPending || reviewText.trim().length === 0}
+                    className="inline-flex items-center justify-center rounded-full border border-rose-400 bg-rose-400 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-rose-500 hover:border-rose-500 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-rose-400 disabled:hover:border-rose-400"
+                  >
+                    {submitReview.isPending ? "Saving…" : "Save"}
+                  </button>
+                  {savedReviewText.trim().length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setReviewText(savedReviewText);
+                        setIsEditingReview(false);
+                        setReviewSaved(null);
+                      }}
+                      className="inline-flex items-center justify-center rounded-full border border-rose-300 bg-white/70 px-4 py-2 text-sm font-medium text-rose-700 shadow-sm transition hover:bg-rose-50 active:scale-[0.99]"
+                    >
+                      Cancel
+                    </button>
+                  )}
+                  {reviewSaved === "ok" && <span className="text-sm text-emerald-700">Saved</span>}
+                  {reviewSaved === "error" && <span className="text-sm text-rose-700">Failed to save</span>}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -546,7 +622,7 @@ export function ReadingRoundDisplay({
                 disabled={finishReading.isPending}
                 className="cute-button-outline"
               >
-                Finished Reading
+                End Round
               </button>
             ) : (
               <div className="rounded-lg border border-rose-200 bg-rose-50/50 p-4">
