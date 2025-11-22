@@ -289,10 +289,43 @@ export const clubsRouter = createTRPCRouter({
           const title = r.title?.trim();
           const author = r.author?.trim();
           if (!title || !author) continue;
+          
+          // Try to fetch cover image
+          let coverImageUrl: string | null = null;
+          try {
+            const searchParams = new URLSearchParams({
+              title: title,
+              author: author,
+            });
+            const searchUrl = `https://openlibrary.org/search.json?${searchParams.toString()}`;
+            const searchResponse = await fetch(searchUrl, {
+              headers: {
+                "User-Agent": "Bookclub App",
+              },
+            });
+
+            if (searchResponse.ok) {
+              const searchData = (await searchResponse.json()) as {
+                numFound: number;
+                docs: Array<{ cover_i?: number }>;
+              };
+              if (searchData.numFound > 0 && searchData.docs[0]?.cover_i) {
+                coverImageUrl = `https://covers.openlibrary.org/b/id/${searchData.docs[0].cover_i}-M.jpg`;
+              }
+            }
+          } catch (error) {
+            // Silently fail - we'll just use emoji placeholder
+            console.error("Error fetching cover:", error);
+          }
+          
           const existing = await ctx.db.book.findFirst({ where: { title, authors: author } });
           const book =
-            existing ??
-            (await ctx.db.book.create({ data: { title, authors: author } }));
+            existing
+              ? await ctx.db.book.update({
+                  where: { id: existing.id },
+                  data: { coverImageUrl: coverImageUrl ?? existing.coverImageUrl },
+                })
+              : await ctx.db.book.create({ data: { title, authors: author, coverImageUrl } });
           created.push({ id: book.id, title: book.title, authors: book.authors });
         }
         if (created.length === 3) {
@@ -309,8 +342,12 @@ export const clubsRouter = createTRPCRouter({
         for (const s of samples) {
           const existing = await ctx.db.book.findFirst({ where: { title: s.title, authors: s.authors } });
           const book =
-            existing ??
-            (await ctx.db.book.create({ data: { title: s.title, authors: s.authors, coverImageUrl: s.coverImageUrl } }));
+            existing
+              ? await ctx.db.book.update({
+                  where: { id: existing.id },
+                  data: { coverImageUrl: s.coverImageUrl ?? existing.coverImageUrl },
+                })
+              : await ctx.db.book.create({ data: { title: s.title, authors: s.authors, coverImageUrl: s.coverImageUrl } });
           created.push({ id: book.id, title: book.title, authors: book.authors });
         }
         books = created;
@@ -544,14 +581,14 @@ export const clubsRouter = createTRPCRouter({
         .map((r) => `"${r.reviewText}"`)
         .join("\n\n");
 
-      const prompt = `Synthesize these book club member reviews into one concise group review (2-3 sentences max). Use only what people actually wrote - don't add details not mentioned.
+      const prompt = `Synthesize these book club member reviews into one very brief group review. Maximum 2 sentences, ideally just 1-2 sentences. Be extremely concise. Use only what people actually wrote - don't add details not mentioned.
 
 Book: "${round.book.title}" by ${round.book.authors}
 
 Member reviews:
 ${reviewsText}
 
-Return ONLY the synthesized review text, no markdown, no quotes, no extra commentary. Be pithy and direct.`;
+Return ONLY the synthesized review text, no markdown, no quotes, no extra commentary. Keep it under 100 words.`;
 
       try {
         const groqResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -563,11 +600,11 @@ Return ONLY the synthesized review text, no markdown, no quotes, no extra commen
           body: JSON.stringify({
             model: "llama-3.3-70b-versatile",
             messages: [
-              { role: "system", content: "You synthesize book reviews concisely. Only use information from the provided reviews. Be brief and direct." },
+              { role: "system", content: "You synthesize book reviews into very brief summaries. Maximum 2 sentences. Be extremely concise. Only use information from the provided reviews. No fluff." },
               { role: "user", content: prompt },
             ],
-            temperature: 0.5,
-            max_tokens: 200,
+            temperature: 0.3,
+            max_tokens: 100,
           }),
         });
 
