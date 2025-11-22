@@ -18,6 +18,36 @@ async function getOrCreateCurrentUserId(ctx: { session: any; db: any }) {
   return DUMMY_ID;
 }
 
+// Helper function to fetch cover image from Open Library
+async function fetchCoverImageUrl(title: string, author: string): Promise<string | null> {
+  try {
+    const searchParams = new URLSearchParams({
+      title: title,
+      author: author,
+    });
+    const searchUrl = `https://openlibrary.org/search.json?${searchParams.toString()}`;
+    const searchResponse = await fetch(searchUrl, {
+      headers: {
+        "User-Agent": "Bookclub App",
+      },
+    });
+
+    if (searchResponse.ok) {
+      const searchData = (await searchResponse.json()) as {
+        numFound: number;
+        docs: Array<{ cover_i?: number }>;
+      };
+      if (searchData.numFound > 0 && searchData.docs[0]?.cover_i) {
+        return `https://covers.openlibrary.org/b/id/${searchData.docs[0].cover_i}-M.jpg`;
+      }
+    }
+  } catch (error) {
+    // Silently fail - we'll just use emoji placeholder
+    console.error("Error fetching cover:", error);
+  }
+  return null;
+}
+
 export const readingRoundsRouter = createTRPCRouter({
   /**
    * Generate context JSON for LLM to pick 3 bookclub books for a reading round.
@@ -642,28 +672,40 @@ IMPORTANT: Return ONLY a valid JSON array with this exact structure (no markdown
           const title = r.title?.trim();
           const author = r.author?.trim();
           if (!title || !author) continue;
+          
+          // Try to fetch cover image
+          const coverImageUrl = await fetchCoverImageUrl(title, author);
+          
           const existing = await ctx.db.book.findFirst({
             where: { title, authors: author },
           });
           const book =
-            existing ??
-            (await ctx.db.book.create({ data: { title, authors: author } }));
+            existing
+              ? await ctx.db.book.update({
+                  where: { id: existing.id },
+                  data: { coverImageUrl: coverImageUrl ?? existing.coverImageUrl },
+                })
+              : await ctx.db.book.create({ data: { title, authors: author, coverImageUrl } });
           books.push({ id: book.id, title: book.title, authors: book.authors });
         }
       } catch (err) {
         // Fallback to sample books
         const samples = [
-          { title: "The Great Gatsby", authors: "F. Scott Fitzgerald" },
-          { title: "Pride and Prejudice", authors: "Jane Austen" },
-          { title: "1984", authors: "George Orwell" },
+          { title: "The Great Gatsby", authors: "F. Scott Fitzgerald", coverImageUrl: "https://covers.openlibrary.org/b/id/7222246-M.jpg" },
+          { title: "Pride and Prejudice", authors: "Jane Austen", coverImageUrl: "https://covers.openlibrary.org/b/id/8091016-M.jpg" },
+          { title: "1984", authors: "George Orwell", coverImageUrl: "https://covers.openlibrary.org/b/id/7222241-M.jpg" },
         ];
         for (const s of samples) {
           const existing = await ctx.db.book.findFirst({
             where: { title: s.title, authors: s.authors },
           });
           const book =
-            existing ??
-            (await ctx.db.book.create({ data: { title: s.title, authors: s.authors } }));
+            existing
+              ? await ctx.db.book.update({
+                  where: { id: existing.id },
+                  data: { coverImageUrl: s.coverImageUrl ?? existing.coverImageUrl },
+                })
+              : await ctx.db.book.create({ data: { title: s.title, authors: s.authors, coverImageUrl: s.coverImageUrl } });
           books.push({ id: book.id, title: book.title, authors: book.authors });
         }
       }
@@ -750,32 +792,7 @@ IMPORTANT: Return ONLY a valid JSON array with this exact structure (no markdown
       }
 
       // Try to fetch cover from Open Library
-      let coverImageUrl: string | null = null;
-      try {
-        const searchParams = new URLSearchParams({
-          title: input.title,
-          author: input.author,
-        });
-        const searchUrl = `https://openlibrary.org/search.json?${searchParams.toString()}`;
-        const searchResponse = await fetch(searchUrl, {
-          headers: {
-            "User-Agent": "Bookclub App",
-          },
-        });
-
-        if (searchResponse.ok) {
-          const searchData = (await searchResponse.json()) as {
-            numFound: number;
-            docs: Array<{ cover_i?: number }>;
-          };
-          if (searchData.numFound > 0 && searchData.docs[0]?.cover_i) {
-            coverImageUrl = `https://covers.openlibrary.org/b/id/${searchData.docs[0].cover_i}-M.jpg`;
-          }
-        }
-      } catch (error) {
-        // Silently fail - we'll just use emoji placeholder
-        console.error("Error fetching cover:", error);
-      }
+      const coverImageUrl = await fetchCoverImageUrl(input.title, input.author);
 
       // Upsert or create book
       const existing = await ctx.db.book.findFirst({
