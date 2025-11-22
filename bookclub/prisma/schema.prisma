@@ -61,6 +61,8 @@ model User {
     pollChoicesAdded  PollChoice[]   @relation("PollChoiceAddedBy")
     votes             Vote[]
     goodreadsImports  GoodreadsImport[] @relation("GoodreadsImportUser")
+    ratings           Rating[]
+    reviews           Review[]
 }
 
 model VerificationToken {
@@ -225,10 +227,42 @@ model ReadingRound {
   startedAt   DateTime?
   finishedAt  DateTime?
   createdAt   DateTime          @default(now())
+  aiGroupReview String?          // AI-synthesized review from all member reviews
 
   group       Group             @relation(fields: [groupId], references: [id], onDelete: Cascade)
   poll        Poll?             @relation(fields: [pollId], references: [id])
   book        Book?             @relation(fields: [bookId], references: [id])
+  ratings     Rating[]
+  reviews     Review[]
 
   @@index([groupId])
+}
+
+model Rating {
+  id            String   @id @default(cuid())
+  readingRoundId String
+  userId        String
+  rating        Int      // 1-5
+  createdAt     DateTime @default(now())
+
+  readingRound  ReadingRound @relation(fields: [readingRoundId], references: [id], onDelete: Cascade)
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([readingRoundId, userId])
+  @@index([readingRoundId])
+}
+
+model Review {
+  id            String   @id @default(cuid())
+  readingRoundId String
+  userId        String
+  reviewText    String   // User's review text
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  readingRound  ReadingRound @relation(fields: [readingRoundId], references: [id], onDelete: Cascade)
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([readingRoundId, userId])
+  @@index([readingRoundId])
 }

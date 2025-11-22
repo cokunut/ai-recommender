@@ -439,4 +439,173 @@ export const clubsRouter = createTRPCRouter({
       }
       return { ok: true } as const;
     }),
+
+  // Get history of finished reading rounds for a club
+  history: publicProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const userId = await getOrCreateCurrentUserId(ctx);
+      const rounds = await ctx.db.readingRound.findMany({
+        where: {
+          groupId: input.id,
+          status: "FINISHED",
+          bookId: { not: null },
+        },
+        include: {
+          book: true,
+          ratings: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+            },
+          },
+          reviews: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: { finishedAt: "desc" },
+      });
+
+      return rounds.map((round) => {
+        const ratings = round.ratings;
+        const avgRating =
+          ratings.length > 0
+            ? ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length
+            : null;
+
+        const myRating = ratings.find((r) => r.userId === userId);
+        const myReview = round.reviews.find((r) => r.userId === userId);
+
+        return {
+          id: round.id,
+          book: round.book
+            ? {
+                id: round.book.id,
+                title: round.book.title,
+                authors: round.book.authors,
+                coverImageUrl: round.book.coverImageUrl,
+              }
+            : null,
+          finishedAt: round.finishedAt,
+          avgRating: avgRating ? Math.round(avgRating * 10) / 10 : null, // Round to 1 decimal
+          ratingCount: ratings.length,
+          aiGroupReview: round.aiGroupReview,
+          myRating: myRating?.rating ?? null,
+          myReview: myReview?.reviewText ?? null,
+        };
+      });
+    }),
+
+  // Generate AI-synthesized group review from all member reviews
+  generateGroupReview: publicProcedure
+    .input(z.object({ readingRoundId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const round = await ctx.db.readingRound.findUnique({
+        where: { id: input.readingRoundId },
+        include: {
+          book: true,
+          reviews: {
+            include: {
+              user: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      if (!round || !round.book) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Reading round or book not found" });
+      }
+
+      if (round.reviews.length === 0) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "No reviews to synthesize" });
+      }
+
+      if (!env.GROQ_API_KEY) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "GROQ_API_KEY not configured" });
+      }
+
+      // Build prompt with all reviews
+      const reviewsText = round.reviews
+        .map((r, idx) => `${idx + 1}. ${r.user.name ?? "Anonymous"}: "${r.reviewText}"`)
+        .join("\n\n");
+
+      const prompt = `You are synthesizing book club member reviews into a cohesive group review.
+
+Book: "${round.book.title}" by ${round.book.authors}
+
+Individual Member Reviews:
+${reviewsText}
+
+Please create a synthesized group review (2-4 paragraphs) that:
+1. Captures the overall sentiment and key themes from the individual reviews
+2. Highlights both positive and critical perspectives
+3. Reflects the diversity of opinions in the group
+4. Is written in a cohesive, natural style (not just a summary)
+
+Return ONLY the review text, no markdown formatting, no quotes, just the review.`;
+
+      try {
+        const groqResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${env.GROQ_API_KEY}`,
+          },
+          body: JSON.stringify({
+            model: "llama-3.3-70b-versatile",
+            messages: [
+              { role: "system", content: "You are a helpful assistant that synthesizes book reviews." },
+              { role: "user", content: prompt },
+            ],
+            temperature: 0.7,
+            max_tokens: 1000,
+          }),
+        });
+
+        if (!groqResponse.ok) {
+          throw new Error(`Groq API error: ${groqResponse.status}`);
+        }
+
+        const groqData = (await groqResponse.json()) as {
+          choices: Array<{
+            message: {
+              content: string;
+            };
+          }>;
+        };
+
+        const synthesizedReview = groqData.choices[0]?.message?.content?.trim();
+        if (!synthesizedReview) {
+          throw new Error("No review generated");
+        }
+
+        // Update the reading round with the AI review
+        await ctx.db.readingRound.update({
+          where: { id: input.readingRoundId },
+          data: { aiGroupReview: synthesizedReview },
+        });
+
+        return { review: synthesizedReview };
+      } catch (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: error instanceof Error ? error.message : "Failed to generate review",
+        });
+      }
+    }),
 });
