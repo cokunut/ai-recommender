@@ -256,6 +256,15 @@ exports.Prisma.ReviewScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.ReadingTasteTagScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  label: 'label',
+  source: 'source',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -335,7 +344,8 @@ exports.Prisma.ModelName = {
   Vote: 'Vote',
   ReadingRound: 'ReadingRound',
   Rating: 'Rating',
-  Review: 'Review'
+  Review: 'Review',
+  ReadingTasteTag: 'ReadingTasteTag'
 };
 
 /**

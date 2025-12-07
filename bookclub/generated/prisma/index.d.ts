@@ -83,6 +83,11 @@ export type Rating = $Result.DefaultSelection<Prisma.$RatingPayload>
  * 
  */
 export type Review = $Result.DefaultSelection<Prisma.$ReviewPayload>
+/**
+ * Model ReadingTasteTag
+ * 
+ */
+export type ReadingTasteTag = $Result.DefaultSelection<Prisma.$ReadingTasteTagPayload>
 
 /**
  * Enums
@@ -424,6 +429,16 @@ export class PrismaClient<
     * ```
     */
   get review(): Prisma.ReviewDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.readingTasteTag`: Exposes CRUD operations for the **ReadingTasteTag** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ReadingTasteTags
+    * const readingTasteTags = await prisma.readingTasteTag.findMany()
+    * ```
+    */
+  get readingTasteTag(): Prisma.ReadingTasteTagDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -878,7 +893,8 @@ export namespace Prisma {
     Vote: 'Vote',
     ReadingRound: 'ReadingRound',
     Rating: 'Rating',
-    Review: 'Review'
+    Review: 'Review',
+    ReadingTasteTag: 'ReadingTasteTag'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -897,7 +913,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "account" | "session" | "user" | "verificationToken" | "group" | "groupMember" | "book" | "goodreadsImport" | "poll" | "pollChoice" | "vote" | "readingRound" | "rating" | "review"
+      modelProps: "account" | "session" | "user" | "verificationToken" | "group" | "groupMember" | "book" | "goodreadsImport" | "poll" | "pollChoice" | "vote" | "readingRound" | "rating" | "review" | "readingTasteTag"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1937,6 +1953,80 @@ export namespace Prisma {
           }
         }
       }
+      ReadingTasteTag: {
+        payload: Prisma.$ReadingTasteTagPayload<ExtArgs>
+        fields: Prisma.ReadingTasteTagFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ReadingTasteTagFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReadingTasteTagPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ReadingTasteTagFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReadingTasteTagPayload>
+          }
+          findFirst: {
+            args: Prisma.ReadingTasteTagFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReadingTasteTagPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ReadingTasteTagFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReadingTasteTagPayload>
+          }
+          findMany: {
+            args: Prisma.ReadingTasteTagFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReadingTasteTagPayload>[]
+          }
+          create: {
+            args: Prisma.ReadingTasteTagCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReadingTasteTagPayload>
+          }
+          createMany: {
+            args: Prisma.ReadingTasteTagCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.ReadingTasteTagCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReadingTasteTagPayload>[]
+          }
+          delete: {
+            args: Prisma.ReadingTasteTagDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReadingTasteTagPayload>
+          }
+          update: {
+            args: Prisma.ReadingTasteTagUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReadingTasteTagPayload>
+          }
+          deleteMany: {
+            args: Prisma.ReadingTasteTagDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ReadingTasteTagUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.ReadingTasteTagUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReadingTasteTagPayload>[]
+          }
+          upsert: {
+            args: Prisma.ReadingTasteTagUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReadingTasteTagPayload>
+          }
+          aggregate: {
+            args: Prisma.ReadingTasteTagAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateReadingTasteTag>
+          }
+          groupBy: {
+            args: Prisma.ReadingTasteTagGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ReadingTasteTagGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ReadingTasteTagCountArgs<ExtArgs>
+            result: $Utils.Optional<ReadingTasteTagCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -2047,6 +2137,7 @@ export namespace Prisma {
     readingRound?: ReadingRoundOmit
     rating?: RatingOmit
     review?: ReviewOmit
+    readingTasteTag?: ReadingTasteTagOmit
   }
 
   /* Types for Logging */
@@ -2137,6 +2228,7 @@ export namespace Prisma {
     goodreadsImports: number
     ratings: number
     reviews: number
+    readingTasteTags: number
   }
 
   export type UserCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -2150,6 +2242,7 @@ export namespace Prisma {
     goodreadsImports?: boolean | UserCountOutputTypeCountGoodreadsImportsArgs
     ratings?: boolean | UserCountOutputTypeCountRatingsArgs
     reviews?: boolean | UserCountOutputTypeCountReviewsArgs
+    readingTasteTags?: boolean | UserCountOutputTypeCountReadingTasteTagsArgs
   }
 
   // Custom InputTypes
@@ -2231,6 +2324,13 @@ export namespace Prisma {
    */
   export type UserCountOutputTypeCountReviewsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: ReviewWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountReadingTasteTagsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ReadingTasteTagWhereInput
   }
 
 
@@ -4907,6 +5007,7 @@ export namespace Prisma {
     goodreadsImports?: boolean | User$goodreadsImportsArgs<ExtArgs>
     ratings?: boolean | User$ratingsArgs<ExtArgs>
     reviews?: boolean | User$reviewsArgs<ExtArgs>
+    readingTasteTags?: boolean | User$readingTasteTagsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
@@ -4958,6 +5059,7 @@ export namespace Prisma {
     goodreadsImports?: boolean | User$goodreadsImportsArgs<ExtArgs>
     ratings?: boolean | User$ratingsArgs<ExtArgs>
     reviews?: boolean | User$reviewsArgs<ExtArgs>
+    readingTasteTags?: boolean | User$readingTasteTagsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -4976,6 +5078,7 @@ export namespace Prisma {
       goodreadsImports: Prisma.$GoodreadsImportPayload<ExtArgs>[]
       ratings: Prisma.$RatingPayload<ExtArgs>[]
       reviews: Prisma.$ReviewPayload<ExtArgs>[]
+      readingTasteTags: Prisma.$ReadingTasteTagPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -5391,6 +5494,7 @@ export namespace Prisma {
     goodreadsImports<T extends User$goodreadsImportsArgs<ExtArgs> = {}>(args?: Subset<T, User$goodreadsImportsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$GoodreadsImportPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     ratings<T extends User$ratingsArgs<ExtArgs> = {}>(args?: Subset<T, User$ratingsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$RatingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     reviews<T extends User$reviewsArgs<ExtArgs> = {}>(args?: Subset<T, User$reviewsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ReviewPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    readingTasteTags<T extends User$readingTasteTagsArgs<ExtArgs> = {}>(args?: Subset<T, User$readingTasteTagsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ReadingTasteTagPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -6054,6 +6158,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: ReviewScalarFieldEnum | ReviewScalarFieldEnum[]
+  }
+
+  /**
+   * User.readingTasteTags
+   */
+  export type User$readingTasteTagsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReadingTasteTag
+     */
+    select?: ReadingTasteTagSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReadingTasteTag
+     */
+    omit?: ReadingTasteTagOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReadingTasteTagInclude<ExtArgs> | null
+    where?: ReadingTasteTagWhereInput
+    orderBy?: ReadingTasteTagOrderByWithRelationInput | ReadingTasteTagOrderByWithRelationInput[]
+    cursor?: ReadingTasteTagWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ReadingTasteTagScalarFieldEnum | ReadingTasteTagScalarFieldEnum[]
   }
 
   /**
@@ -18359,6 +18487,1077 @@ export namespace Prisma {
 
 
   /**
+   * Model ReadingTasteTag
+   */
+
+  export type AggregateReadingTasteTag = {
+    _count: ReadingTasteTagCountAggregateOutputType | null
+    _min: ReadingTasteTagMinAggregateOutputType | null
+    _max: ReadingTasteTagMaxAggregateOutputType | null
+  }
+
+  export type ReadingTasteTagMinAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    label: string | null
+    source: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ReadingTasteTagMaxAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    label: string | null
+    source: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ReadingTasteTagCountAggregateOutputType = {
+    id: number
+    userId: number
+    label: number
+    source: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type ReadingTasteTagMinAggregateInputType = {
+    id?: true
+    userId?: true
+    label?: true
+    source?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type ReadingTasteTagMaxAggregateInputType = {
+    id?: true
+    userId?: true
+    label?: true
+    source?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type ReadingTasteTagCountAggregateInputType = {
+    id?: true
+    userId?: true
+    label?: true
+    source?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type ReadingTasteTagAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ReadingTasteTag to aggregate.
+     */
+    where?: ReadingTasteTagWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ReadingTasteTags to fetch.
+     */
+    orderBy?: ReadingTasteTagOrderByWithRelationInput | ReadingTasteTagOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ReadingTasteTagWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ReadingTasteTags from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ReadingTasteTags.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ReadingTasteTags
+    **/
+    _count?: true | ReadingTasteTagCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ReadingTasteTagMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ReadingTasteTagMaxAggregateInputType
+  }
+
+  export type GetReadingTasteTagAggregateType<T extends ReadingTasteTagAggregateArgs> = {
+        [P in keyof T & keyof AggregateReadingTasteTag]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateReadingTasteTag[P]>
+      : GetScalarType<T[P], AggregateReadingTasteTag[P]>
+  }
+
+
+
+
+  export type ReadingTasteTagGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ReadingTasteTagWhereInput
+    orderBy?: ReadingTasteTagOrderByWithAggregationInput | ReadingTasteTagOrderByWithAggregationInput[]
+    by: ReadingTasteTagScalarFieldEnum[] | ReadingTasteTagScalarFieldEnum
+    having?: ReadingTasteTagScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ReadingTasteTagCountAggregateInputType | true
+    _min?: ReadingTasteTagMinAggregateInputType
+    _max?: ReadingTasteTagMaxAggregateInputType
+  }
+
+  export type ReadingTasteTagGroupByOutputType = {
+    id: string
+    userId: string
+    label: string
+    source: string
+    createdAt: Date
+    updatedAt: Date
+    _count: ReadingTasteTagCountAggregateOutputType | null
+    _min: ReadingTasteTagMinAggregateOutputType | null
+    _max: ReadingTasteTagMaxAggregateOutputType | null
+  }
+
+  type GetReadingTasteTagGroupByPayload<T extends ReadingTasteTagGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ReadingTasteTagGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ReadingTasteTagGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ReadingTasteTagGroupByOutputType[P]>
+            : GetScalarType<T[P], ReadingTasteTagGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ReadingTasteTagSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    label?: boolean
+    source?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["readingTasteTag"]>
+
+  export type ReadingTasteTagSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    label?: boolean
+    source?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["readingTasteTag"]>
+
+  export type ReadingTasteTagSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    label?: boolean
+    source?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["readingTasteTag"]>
+
+  export type ReadingTasteTagSelectScalar = {
+    id?: boolean
+    userId?: boolean
+    label?: boolean
+    source?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type ReadingTasteTagOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "label" | "source" | "createdAt" | "updatedAt", ExtArgs["result"]["readingTasteTag"]>
+  export type ReadingTasteTagInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type ReadingTasteTagIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type ReadingTasteTagIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+
+  export type $ReadingTasteTagPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ReadingTasteTag"
+    objects: {
+      user: Prisma.$UserPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      userId: string
+      label: string
+      source: string
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["readingTasteTag"]>
+    composites: {}
+  }
+
+  type ReadingTasteTagGetPayload<S extends boolean | null | undefined | ReadingTasteTagDefaultArgs> = $Result.GetResult<Prisma.$ReadingTasteTagPayload, S>
+
+  type ReadingTasteTagCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<ReadingTasteTagFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: ReadingTasteTagCountAggregateInputType | true
+    }
+
+  export interface ReadingTasteTagDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ReadingTasteTag'], meta: { name: 'ReadingTasteTag' } }
+    /**
+     * Find zero or one ReadingTasteTag that matches the filter.
+     * @param {ReadingTasteTagFindUniqueArgs} args - Arguments to find a ReadingTasteTag
+     * @example
+     * // Get one ReadingTasteTag
+     * const readingTasteTag = await prisma.readingTasteTag.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ReadingTasteTagFindUniqueArgs>(args: SelectSubset<T, ReadingTasteTagFindUniqueArgs<ExtArgs>>): Prisma__ReadingTasteTagClient<$Result.GetResult<Prisma.$ReadingTasteTagPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one ReadingTasteTag that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {ReadingTasteTagFindUniqueOrThrowArgs} args - Arguments to find a ReadingTasteTag
+     * @example
+     * // Get one ReadingTasteTag
+     * const readingTasteTag = await prisma.readingTasteTag.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ReadingTasteTagFindUniqueOrThrowArgs>(args: SelectSubset<T, ReadingTasteTagFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ReadingTasteTagClient<$Result.GetResult<Prisma.$ReadingTasteTagPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ReadingTasteTag that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ReadingTasteTagFindFirstArgs} args - Arguments to find a ReadingTasteTag
+     * @example
+     * // Get one ReadingTasteTag
+     * const readingTasteTag = await prisma.readingTasteTag.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ReadingTasteTagFindFirstArgs>(args?: SelectSubset<T, ReadingTasteTagFindFirstArgs<ExtArgs>>): Prisma__ReadingTasteTagClient<$Result.GetResult<Prisma.$ReadingTasteTagPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ReadingTasteTag that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ReadingTasteTagFindFirstOrThrowArgs} args - Arguments to find a ReadingTasteTag
+     * @example
+     * // Get one ReadingTasteTag
+     * const readingTasteTag = await prisma.readingTasteTag.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ReadingTasteTagFindFirstOrThrowArgs>(args?: SelectSubset<T, ReadingTasteTagFindFirstOrThrowArgs<ExtArgs>>): Prisma__ReadingTasteTagClient<$Result.GetResult<Prisma.$ReadingTasteTagPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more ReadingTasteTags that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ReadingTasteTagFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ReadingTasteTags
+     * const readingTasteTags = await prisma.readingTasteTag.findMany()
+     * 
+     * // Get first 10 ReadingTasteTags
+     * const readingTasteTags = await prisma.readingTasteTag.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const readingTasteTagWithIdOnly = await prisma.readingTasteTag.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ReadingTasteTagFindManyArgs>(args?: SelectSubset<T, ReadingTasteTagFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ReadingTasteTagPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a ReadingTasteTag.
+     * @param {ReadingTasteTagCreateArgs} args - Arguments to create a ReadingTasteTag.
+     * @example
+     * // Create one ReadingTasteTag
+     * const ReadingTasteTag = await prisma.readingTasteTag.create({
+     *   data: {
+     *     // ... data to create a ReadingTasteTag
+     *   }
+     * })
+     * 
+     */
+    create<T extends ReadingTasteTagCreateArgs>(args: SelectSubset<T, ReadingTasteTagCreateArgs<ExtArgs>>): Prisma__ReadingTasteTagClient<$Result.GetResult<Prisma.$ReadingTasteTagPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many ReadingTasteTags.
+     * @param {ReadingTasteTagCreateManyArgs} args - Arguments to create many ReadingTasteTags.
+     * @example
+     * // Create many ReadingTasteTags
+     * const readingTasteTag = await prisma.readingTasteTag.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ReadingTasteTagCreateManyArgs>(args?: SelectSubset<T, ReadingTasteTagCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many ReadingTasteTags and returns the data saved in the database.
+     * @param {ReadingTasteTagCreateManyAndReturnArgs} args - Arguments to create many ReadingTasteTags.
+     * @example
+     * // Create many ReadingTasteTags
+     * const readingTasteTag = await prisma.readingTasteTag.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many ReadingTasteTags and only return the `id`
+     * const readingTasteTagWithIdOnly = await prisma.readingTasteTag.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends ReadingTasteTagCreateManyAndReturnArgs>(args?: SelectSubset<T, ReadingTasteTagCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ReadingTasteTagPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a ReadingTasteTag.
+     * @param {ReadingTasteTagDeleteArgs} args - Arguments to delete one ReadingTasteTag.
+     * @example
+     * // Delete one ReadingTasteTag
+     * const ReadingTasteTag = await prisma.readingTasteTag.delete({
+     *   where: {
+     *     // ... filter to delete one ReadingTasteTag
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ReadingTasteTagDeleteArgs>(args: SelectSubset<T, ReadingTasteTagDeleteArgs<ExtArgs>>): Prisma__ReadingTasteTagClient<$Result.GetResult<Prisma.$ReadingTasteTagPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one ReadingTasteTag.
+     * @param {ReadingTasteTagUpdateArgs} args - Arguments to update one ReadingTasteTag.
+     * @example
+     * // Update one ReadingTasteTag
+     * const readingTasteTag = await prisma.readingTasteTag.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ReadingTasteTagUpdateArgs>(args: SelectSubset<T, ReadingTasteTagUpdateArgs<ExtArgs>>): Prisma__ReadingTasteTagClient<$Result.GetResult<Prisma.$ReadingTasteTagPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more ReadingTasteTags.
+     * @param {ReadingTasteTagDeleteManyArgs} args - Arguments to filter ReadingTasteTags to delete.
+     * @example
+     * // Delete a few ReadingTasteTags
+     * const { count } = await prisma.readingTasteTag.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ReadingTasteTagDeleteManyArgs>(args?: SelectSubset<T, ReadingTasteTagDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ReadingTasteTags.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ReadingTasteTagUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ReadingTasteTags
+     * const readingTasteTag = await prisma.readingTasteTag.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ReadingTasteTagUpdateManyArgs>(args: SelectSubset<T, ReadingTasteTagUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ReadingTasteTags and returns the data updated in the database.
+     * @param {ReadingTasteTagUpdateManyAndReturnArgs} args - Arguments to update many ReadingTasteTags.
+     * @example
+     * // Update many ReadingTasteTags
+     * const readingTasteTag = await prisma.readingTasteTag.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more ReadingTasteTags and only return the `id`
+     * const readingTasteTagWithIdOnly = await prisma.readingTasteTag.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends ReadingTasteTagUpdateManyAndReturnArgs>(args: SelectSubset<T, ReadingTasteTagUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ReadingTasteTagPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one ReadingTasteTag.
+     * @param {ReadingTasteTagUpsertArgs} args - Arguments to update or create a ReadingTasteTag.
+     * @example
+     * // Update or create a ReadingTasteTag
+     * const readingTasteTag = await prisma.readingTasteTag.upsert({
+     *   create: {
+     *     // ... data to create a ReadingTasteTag
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ReadingTasteTag we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ReadingTasteTagUpsertArgs>(args: SelectSubset<T, ReadingTasteTagUpsertArgs<ExtArgs>>): Prisma__ReadingTasteTagClient<$Result.GetResult<Prisma.$ReadingTasteTagPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of ReadingTasteTags.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ReadingTasteTagCountArgs} args - Arguments to filter ReadingTasteTags to count.
+     * @example
+     * // Count the number of ReadingTasteTags
+     * const count = await prisma.readingTasteTag.count({
+     *   where: {
+     *     // ... the filter for the ReadingTasteTags we want to count
+     *   }
+     * })
+    **/
+    count<T extends ReadingTasteTagCountArgs>(
+      args?: Subset<T, ReadingTasteTagCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ReadingTasteTagCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ReadingTasteTag.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ReadingTasteTagAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ReadingTasteTagAggregateArgs>(args: Subset<T, ReadingTasteTagAggregateArgs>): Prisma.PrismaPromise<GetReadingTasteTagAggregateType<T>>
+
+    /**
+     * Group by ReadingTasteTag.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ReadingTasteTagGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ReadingTasteTagGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ReadingTasteTagGroupByArgs['orderBy'] }
+        : { orderBy?: ReadingTasteTagGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ReadingTasteTagGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetReadingTasteTagGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ReadingTasteTag model
+   */
+  readonly fields: ReadingTasteTagFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ReadingTasteTag.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ReadingTasteTagClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ReadingTasteTag model
+   */
+  interface ReadingTasteTagFieldRefs {
+    readonly id: FieldRef<"ReadingTasteTag", 'String'>
+    readonly userId: FieldRef<"ReadingTasteTag", 'String'>
+    readonly label: FieldRef<"ReadingTasteTag", 'String'>
+    readonly source: FieldRef<"ReadingTasteTag", 'String'>
+    readonly createdAt: FieldRef<"ReadingTasteTag", 'DateTime'>
+    readonly updatedAt: FieldRef<"ReadingTasteTag", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ReadingTasteTag findUnique
+   */
+  export type ReadingTasteTagFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReadingTasteTag
+     */
+    select?: ReadingTasteTagSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReadingTasteTag
+     */
+    omit?: ReadingTasteTagOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReadingTasteTagInclude<ExtArgs> | null
+    /**
+     * Filter, which ReadingTasteTag to fetch.
+     */
+    where: ReadingTasteTagWhereUniqueInput
+  }
+
+  /**
+   * ReadingTasteTag findUniqueOrThrow
+   */
+  export type ReadingTasteTagFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReadingTasteTag
+     */
+    select?: ReadingTasteTagSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReadingTasteTag
+     */
+    omit?: ReadingTasteTagOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReadingTasteTagInclude<ExtArgs> | null
+    /**
+     * Filter, which ReadingTasteTag to fetch.
+     */
+    where: ReadingTasteTagWhereUniqueInput
+  }
+
+  /**
+   * ReadingTasteTag findFirst
+   */
+  export type ReadingTasteTagFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReadingTasteTag
+     */
+    select?: ReadingTasteTagSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReadingTasteTag
+     */
+    omit?: ReadingTasteTagOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReadingTasteTagInclude<ExtArgs> | null
+    /**
+     * Filter, which ReadingTasteTag to fetch.
+     */
+    where?: ReadingTasteTagWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ReadingTasteTags to fetch.
+     */
+    orderBy?: ReadingTasteTagOrderByWithRelationInput | ReadingTasteTagOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ReadingTasteTags.
+     */
+    cursor?: ReadingTasteTagWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ReadingTasteTags from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ReadingTasteTags.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ReadingTasteTags.
+     */
+    distinct?: ReadingTasteTagScalarFieldEnum | ReadingTasteTagScalarFieldEnum[]
+  }
+
+  /**
+   * ReadingTasteTag findFirstOrThrow
+   */
+  export type ReadingTasteTagFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReadingTasteTag
+     */
+    select?: ReadingTasteTagSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReadingTasteTag
+     */
+    omit?: ReadingTasteTagOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReadingTasteTagInclude<ExtArgs> | null
+    /**
+     * Filter, which ReadingTasteTag to fetch.
+     */
+    where?: ReadingTasteTagWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ReadingTasteTags to fetch.
+     */
+    orderBy?: ReadingTasteTagOrderByWithRelationInput | ReadingTasteTagOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ReadingTasteTags.
+     */
+    cursor?: ReadingTasteTagWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ReadingTasteTags from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ReadingTasteTags.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ReadingTasteTags.
+     */
+    distinct?: ReadingTasteTagScalarFieldEnum | ReadingTasteTagScalarFieldEnum[]
+  }
+
+  /**
+   * ReadingTasteTag findMany
+   */
+  export type ReadingTasteTagFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReadingTasteTag
+     */
+    select?: ReadingTasteTagSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReadingTasteTag
+     */
+    omit?: ReadingTasteTagOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReadingTasteTagInclude<ExtArgs> | null
+    /**
+     * Filter, which ReadingTasteTags to fetch.
+     */
+    where?: ReadingTasteTagWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ReadingTasteTags to fetch.
+     */
+    orderBy?: ReadingTasteTagOrderByWithRelationInput | ReadingTasteTagOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ReadingTasteTags.
+     */
+    cursor?: ReadingTasteTagWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ReadingTasteTags from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ReadingTasteTags.
+     */
+    skip?: number
+    distinct?: ReadingTasteTagScalarFieldEnum | ReadingTasteTagScalarFieldEnum[]
+  }
+
+  /**
+   * ReadingTasteTag create
+   */
+  export type ReadingTasteTagCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReadingTasteTag
+     */
+    select?: ReadingTasteTagSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReadingTasteTag
+     */
+    omit?: ReadingTasteTagOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReadingTasteTagInclude<ExtArgs> | null
+    /**
+     * The data needed to create a ReadingTasteTag.
+     */
+    data: XOR<ReadingTasteTagCreateInput, ReadingTasteTagUncheckedCreateInput>
+  }
+
+  /**
+   * ReadingTasteTag createMany
+   */
+  export type ReadingTasteTagCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ReadingTasteTags.
+     */
+    data: ReadingTasteTagCreateManyInput | ReadingTasteTagCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * ReadingTasteTag createManyAndReturn
+   */
+  export type ReadingTasteTagCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReadingTasteTag
+     */
+    select?: ReadingTasteTagSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReadingTasteTag
+     */
+    omit?: ReadingTasteTagOmit<ExtArgs> | null
+    /**
+     * The data used to create many ReadingTasteTags.
+     */
+    data: ReadingTasteTagCreateManyInput | ReadingTasteTagCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReadingTasteTagIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ReadingTasteTag update
+   */
+  export type ReadingTasteTagUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReadingTasteTag
+     */
+    select?: ReadingTasteTagSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReadingTasteTag
+     */
+    omit?: ReadingTasteTagOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReadingTasteTagInclude<ExtArgs> | null
+    /**
+     * The data needed to update a ReadingTasteTag.
+     */
+    data: XOR<ReadingTasteTagUpdateInput, ReadingTasteTagUncheckedUpdateInput>
+    /**
+     * Choose, which ReadingTasteTag to update.
+     */
+    where: ReadingTasteTagWhereUniqueInput
+  }
+
+  /**
+   * ReadingTasteTag updateMany
+   */
+  export type ReadingTasteTagUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ReadingTasteTags.
+     */
+    data: XOR<ReadingTasteTagUpdateManyMutationInput, ReadingTasteTagUncheckedUpdateManyInput>
+    /**
+     * Filter which ReadingTasteTags to update
+     */
+    where?: ReadingTasteTagWhereInput
+    /**
+     * Limit how many ReadingTasteTags to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * ReadingTasteTag updateManyAndReturn
+   */
+  export type ReadingTasteTagUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReadingTasteTag
+     */
+    select?: ReadingTasteTagSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReadingTasteTag
+     */
+    omit?: ReadingTasteTagOmit<ExtArgs> | null
+    /**
+     * The data used to update ReadingTasteTags.
+     */
+    data: XOR<ReadingTasteTagUpdateManyMutationInput, ReadingTasteTagUncheckedUpdateManyInput>
+    /**
+     * Filter which ReadingTasteTags to update
+     */
+    where?: ReadingTasteTagWhereInput
+    /**
+     * Limit how many ReadingTasteTags to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReadingTasteTagIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ReadingTasteTag upsert
+   */
+  export type ReadingTasteTagUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReadingTasteTag
+     */
+    select?: ReadingTasteTagSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReadingTasteTag
+     */
+    omit?: ReadingTasteTagOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReadingTasteTagInclude<ExtArgs> | null
+    /**
+     * The filter to search for the ReadingTasteTag to update in case it exists.
+     */
+    where: ReadingTasteTagWhereUniqueInput
+    /**
+     * In case the ReadingTasteTag found by the `where` argument doesn't exist, create a new ReadingTasteTag with this data.
+     */
+    create: XOR<ReadingTasteTagCreateInput, ReadingTasteTagUncheckedCreateInput>
+    /**
+     * In case the ReadingTasteTag was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ReadingTasteTagUpdateInput, ReadingTasteTagUncheckedUpdateInput>
+  }
+
+  /**
+   * ReadingTasteTag delete
+   */
+  export type ReadingTasteTagDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReadingTasteTag
+     */
+    select?: ReadingTasteTagSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReadingTasteTag
+     */
+    omit?: ReadingTasteTagOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReadingTasteTagInclude<ExtArgs> | null
+    /**
+     * Filter which ReadingTasteTag to delete.
+     */
+    where: ReadingTasteTagWhereUniqueInput
+  }
+
+  /**
+   * ReadingTasteTag deleteMany
+   */
+  export type ReadingTasteTagDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ReadingTasteTags to delete
+     */
+    where?: ReadingTasteTagWhereInput
+    /**
+     * Limit how many ReadingTasteTags to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * ReadingTasteTag without action
+   */
+  export type ReadingTasteTagDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReadingTasteTag
+     */
+    select?: ReadingTasteTagSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReadingTasteTag
+     */
+    omit?: ReadingTasteTagOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReadingTasteTagInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -18547,6 +19746,18 @@ export namespace Prisma {
   };
 
   export type ReviewScalarFieldEnum = (typeof ReviewScalarFieldEnum)[keyof typeof ReviewScalarFieldEnum]
+
+
+  export const ReadingTasteTagScalarFieldEnum: {
+    id: 'id',
+    userId: 'userId',
+    label: 'label',
+    source: 'source',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type ReadingTasteTagScalarFieldEnum = (typeof ReadingTasteTagScalarFieldEnum)[keyof typeof ReadingTasteTagScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -18930,6 +20141,7 @@ export namespace Prisma {
     goodreadsImports?: GoodreadsImportListRelationFilter
     ratings?: RatingListRelationFilter
     reviews?: ReviewListRelationFilter
+    readingTasteTags?: ReadingTasteTagListRelationFilter
   }
 
   export type UserOrderByWithRelationInput = {
@@ -18952,6 +20164,7 @@ export namespace Prisma {
     goodreadsImports?: GoodreadsImportOrderByRelationAggregateInput
     ratings?: RatingOrderByRelationAggregateInput
     reviews?: ReviewOrderByRelationAggregateInput
+    readingTasteTags?: ReadingTasteTagOrderByRelationAggregateInput
   }
 
   export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -18977,6 +20190,7 @@ export namespace Prisma {
     goodreadsImports?: GoodreadsImportListRelationFilter
     ratings?: RatingListRelationFilter
     reviews?: ReviewListRelationFilter
+    readingTasteTags?: ReadingTasteTagListRelationFilter
   }, "id" | "email">
 
   export type UserOrderByWithAggregationInput = {
@@ -19747,6 +20961,66 @@ export namespace Prisma {
     updatedAt?: DateTimeWithAggregatesFilter<"Review"> | Date | string
   }
 
+  export type ReadingTasteTagWhereInput = {
+    AND?: ReadingTasteTagWhereInput | ReadingTasteTagWhereInput[]
+    OR?: ReadingTasteTagWhereInput[]
+    NOT?: ReadingTasteTagWhereInput | ReadingTasteTagWhereInput[]
+    id?: StringFilter<"ReadingTasteTag"> | string
+    userId?: StringFilter<"ReadingTasteTag"> | string
+    label?: StringFilter<"ReadingTasteTag"> | string
+    source?: StringFilter<"ReadingTasteTag"> | string
+    createdAt?: DateTimeFilter<"ReadingTasteTag"> | Date | string
+    updatedAt?: DateTimeFilter<"ReadingTasteTag"> | Date | string
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }
+
+  export type ReadingTasteTagOrderByWithRelationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    label?: SortOrder
+    source?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    user?: UserOrderByWithRelationInput
+  }
+
+  export type ReadingTasteTagWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: ReadingTasteTagWhereInput | ReadingTasteTagWhereInput[]
+    OR?: ReadingTasteTagWhereInput[]
+    NOT?: ReadingTasteTagWhereInput | ReadingTasteTagWhereInput[]
+    userId?: StringFilter<"ReadingTasteTag"> | string
+    label?: StringFilter<"ReadingTasteTag"> | string
+    source?: StringFilter<"ReadingTasteTag"> | string
+    createdAt?: DateTimeFilter<"ReadingTasteTag"> | Date | string
+    updatedAt?: DateTimeFilter<"ReadingTasteTag"> | Date | string
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }, "id">
+
+  export type ReadingTasteTagOrderByWithAggregationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    label?: SortOrder
+    source?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: ReadingTasteTagCountOrderByAggregateInput
+    _max?: ReadingTasteTagMaxOrderByAggregateInput
+    _min?: ReadingTasteTagMinOrderByAggregateInput
+  }
+
+  export type ReadingTasteTagScalarWhereWithAggregatesInput = {
+    AND?: ReadingTasteTagScalarWhereWithAggregatesInput | ReadingTasteTagScalarWhereWithAggregatesInput[]
+    OR?: ReadingTasteTagScalarWhereWithAggregatesInput[]
+    NOT?: ReadingTasteTagScalarWhereWithAggregatesInput | ReadingTasteTagScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"ReadingTasteTag"> | string
+    userId?: StringWithAggregatesFilter<"ReadingTasteTag"> | string
+    label?: StringWithAggregatesFilter<"ReadingTasteTag"> | string
+    source?: StringWithAggregatesFilter<"ReadingTasteTag"> | string
+    createdAt?: DateTimeWithAggregatesFilter<"ReadingTasteTag"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"ReadingTasteTag"> | Date | string
+  }
+
   export type AccountCreateInput = {
     id?: string
     type: string
@@ -19926,6 +21200,7 @@ export namespace Prisma {
     goodreadsImports?: GoodreadsImportCreateNestedManyWithoutUserInput
     ratings?: RatingCreateNestedManyWithoutUserInput
     reviews?: ReviewCreateNestedManyWithoutUserInput
+    readingTasteTags?: ReadingTasteTagCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateInput = {
@@ -19948,6 +21223,7 @@ export namespace Prisma {
     goodreadsImports?: GoodreadsImportUncheckedCreateNestedManyWithoutUserInput
     ratings?: RatingUncheckedCreateNestedManyWithoutUserInput
     reviews?: ReviewUncheckedCreateNestedManyWithoutUserInput
+    readingTasteTags?: ReadingTasteTagUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserUpdateInput = {
@@ -19970,6 +21246,7 @@ export namespace Prisma {
     goodreadsImports?: GoodreadsImportUpdateManyWithoutUserNestedInput
     ratings?: RatingUpdateManyWithoutUserNestedInput
     reviews?: ReviewUpdateManyWithoutUserNestedInput
+    readingTasteTags?: ReadingTasteTagUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateInput = {
@@ -19992,6 +21269,7 @@ export namespace Prisma {
     goodreadsImports?: GoodreadsImportUncheckedUpdateManyWithoutUserNestedInput
     ratings?: RatingUncheckedUpdateManyWithoutUserNestedInput
     reviews?: ReviewUncheckedUpdateManyWithoutUserNestedInput
+    readingTasteTags?: ReadingTasteTagUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateManyInput = {
@@ -20758,6 +22036,68 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type ReadingTasteTagCreateInput = {
+    id?: string
+    label: string
+    source: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    user: UserCreateNestedOneWithoutReadingTasteTagsInput
+  }
+
+  export type ReadingTasteTagUncheckedCreateInput = {
+    id?: string
+    userId: string
+    label: string
+    source: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ReadingTasteTagUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    source?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutReadingTasteTagsNestedInput
+  }
+
+  export type ReadingTasteTagUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    source?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ReadingTasteTagCreateManyInput = {
+    id?: string
+    userId: string
+    label: string
+    source: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ReadingTasteTagUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    source?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ReadingTasteTagUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    source?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type StringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[] | ListStringFieldRefInput<$PrismaModel>
@@ -21041,6 +22381,12 @@ export namespace Prisma {
     none?: ReviewWhereInput
   }
 
+  export type ReadingTasteTagListRelationFilter = {
+    every?: ReadingTasteTagWhereInput
+    some?: ReadingTasteTagWhereInput
+    none?: ReadingTasteTagWhereInput
+  }
+
   export type AccountOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
@@ -21078,6 +22424,10 @@ export namespace Prisma {
   }
 
   export type ReviewOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type ReadingTasteTagOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -21750,6 +23100,33 @@ export namespace Prisma {
     updatedAt?: SortOrder
   }
 
+  export type ReadingTasteTagCountOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    label?: SortOrder
+    source?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ReadingTasteTagMaxOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    label?: SortOrder
+    source?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ReadingTasteTagMinOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    label?: SortOrder
+    source?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
   export type UserCreateNestedOneWithoutAccountsInput = {
     create?: XOR<UserCreateWithoutAccountsInput, UserUncheckedCreateWithoutAccountsInput>
     connectOrCreate?: UserCreateOrConnectWithoutAccountsInput
@@ -21868,6 +23245,13 @@ export namespace Prisma {
     connect?: ReviewWhereUniqueInput | ReviewWhereUniqueInput[]
   }
 
+  export type ReadingTasteTagCreateNestedManyWithoutUserInput = {
+    create?: XOR<ReadingTasteTagCreateWithoutUserInput, ReadingTasteTagUncheckedCreateWithoutUserInput> | ReadingTasteTagCreateWithoutUserInput[] | ReadingTasteTagUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: ReadingTasteTagCreateOrConnectWithoutUserInput | ReadingTasteTagCreateOrConnectWithoutUserInput[]
+    createMany?: ReadingTasteTagCreateManyUserInputEnvelope
+    connect?: ReadingTasteTagWhereUniqueInput | ReadingTasteTagWhereUniqueInput[]
+  }
+
   export type AccountUncheckedCreateNestedManyWithoutUserInput = {
     create?: XOR<AccountCreateWithoutUserInput, AccountUncheckedCreateWithoutUserInput> | AccountCreateWithoutUserInput[] | AccountUncheckedCreateWithoutUserInput[]
     connectOrCreate?: AccountCreateOrConnectWithoutUserInput | AccountCreateOrConnectWithoutUserInput[]
@@ -21936,6 +23320,13 @@ export namespace Prisma {
     connectOrCreate?: ReviewCreateOrConnectWithoutUserInput | ReviewCreateOrConnectWithoutUserInput[]
     createMany?: ReviewCreateManyUserInputEnvelope
     connect?: ReviewWhereUniqueInput | ReviewWhereUniqueInput[]
+  }
+
+  export type ReadingTasteTagUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<ReadingTasteTagCreateWithoutUserInput, ReadingTasteTagUncheckedCreateWithoutUserInput> | ReadingTasteTagCreateWithoutUserInput[] | ReadingTasteTagUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: ReadingTasteTagCreateOrConnectWithoutUserInput | ReadingTasteTagCreateOrConnectWithoutUserInput[]
+    createMany?: ReadingTasteTagCreateManyUserInputEnvelope
+    connect?: ReadingTasteTagWhereUniqueInput | ReadingTasteTagWhereUniqueInput[]
   }
 
   export type NullableDateTimeFieldUpdateOperationsInput = {
@@ -22082,6 +23473,20 @@ export namespace Prisma {
     deleteMany?: ReviewScalarWhereInput | ReviewScalarWhereInput[]
   }
 
+  export type ReadingTasteTagUpdateManyWithoutUserNestedInput = {
+    create?: XOR<ReadingTasteTagCreateWithoutUserInput, ReadingTasteTagUncheckedCreateWithoutUserInput> | ReadingTasteTagCreateWithoutUserInput[] | ReadingTasteTagUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: ReadingTasteTagCreateOrConnectWithoutUserInput | ReadingTasteTagCreateOrConnectWithoutUserInput[]
+    upsert?: ReadingTasteTagUpsertWithWhereUniqueWithoutUserInput | ReadingTasteTagUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: ReadingTasteTagCreateManyUserInputEnvelope
+    set?: ReadingTasteTagWhereUniqueInput | ReadingTasteTagWhereUniqueInput[]
+    disconnect?: ReadingTasteTagWhereUniqueInput | ReadingTasteTagWhereUniqueInput[]
+    delete?: ReadingTasteTagWhereUniqueInput | ReadingTasteTagWhereUniqueInput[]
+    connect?: ReadingTasteTagWhereUniqueInput | ReadingTasteTagWhereUniqueInput[]
+    update?: ReadingTasteTagUpdateWithWhereUniqueWithoutUserInput | ReadingTasteTagUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: ReadingTasteTagUpdateManyWithWhereWithoutUserInput | ReadingTasteTagUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: ReadingTasteTagScalarWhereInput | ReadingTasteTagScalarWhereInput[]
+  }
+
   export type AccountUncheckedUpdateManyWithoutUserNestedInput = {
     create?: XOR<AccountCreateWithoutUserInput, AccountUncheckedCreateWithoutUserInput> | AccountCreateWithoutUserInput[] | AccountUncheckedCreateWithoutUserInput[]
     connectOrCreate?: AccountCreateOrConnectWithoutUserInput | AccountCreateOrConnectWithoutUserInput[]
@@ -22220,6 +23625,20 @@ export namespace Prisma {
     update?: ReviewUpdateWithWhereUniqueWithoutUserInput | ReviewUpdateWithWhereUniqueWithoutUserInput[]
     updateMany?: ReviewUpdateManyWithWhereWithoutUserInput | ReviewUpdateManyWithWhereWithoutUserInput[]
     deleteMany?: ReviewScalarWhereInput | ReviewScalarWhereInput[]
+  }
+
+  export type ReadingTasteTagUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<ReadingTasteTagCreateWithoutUserInput, ReadingTasteTagUncheckedCreateWithoutUserInput> | ReadingTasteTagCreateWithoutUserInput[] | ReadingTasteTagUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: ReadingTasteTagCreateOrConnectWithoutUserInput | ReadingTasteTagCreateOrConnectWithoutUserInput[]
+    upsert?: ReadingTasteTagUpsertWithWhereUniqueWithoutUserInput | ReadingTasteTagUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: ReadingTasteTagCreateManyUserInputEnvelope
+    set?: ReadingTasteTagWhereUniqueInput | ReadingTasteTagWhereUniqueInput[]
+    disconnect?: ReadingTasteTagWhereUniqueInput | ReadingTasteTagWhereUniqueInput[]
+    delete?: ReadingTasteTagWhereUniqueInput | ReadingTasteTagWhereUniqueInput[]
+    connect?: ReadingTasteTagWhereUniqueInput | ReadingTasteTagWhereUniqueInput[]
+    update?: ReadingTasteTagUpdateWithWhereUniqueWithoutUserInput | ReadingTasteTagUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: ReadingTasteTagUpdateManyWithWhereWithoutUserInput | ReadingTasteTagUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: ReadingTasteTagScalarWhereInput | ReadingTasteTagScalarWhereInput[]
   }
 
   export type UserCreateNestedOneWithoutGroupsCreatedInput = {
@@ -23046,6 +24465,20 @@ export namespace Prisma {
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutReviewsInput, UserUpdateWithoutReviewsInput>, UserUncheckedUpdateWithoutReviewsInput>
   }
 
+  export type UserCreateNestedOneWithoutReadingTasteTagsInput = {
+    create?: XOR<UserCreateWithoutReadingTasteTagsInput, UserUncheckedCreateWithoutReadingTasteTagsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutReadingTasteTagsInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type UserUpdateOneRequiredWithoutReadingTasteTagsNestedInput = {
+    create?: XOR<UserCreateWithoutReadingTasteTagsInput, UserUncheckedCreateWithoutReadingTasteTagsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutReadingTasteTagsInput
+    upsert?: UserUpsertWithoutReadingTasteTagsInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutReadingTasteTagsInput, UserUpdateWithoutReadingTasteTagsInput>, UserUncheckedUpdateWithoutReadingTasteTagsInput>
+  }
+
   export type NestedStringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[] | ListStringFieldRefInput<$PrismaModel>
@@ -23401,6 +24834,7 @@ export namespace Prisma {
     goodreadsImports?: GoodreadsImportCreateNestedManyWithoutUserInput
     ratings?: RatingCreateNestedManyWithoutUserInput
     reviews?: ReviewCreateNestedManyWithoutUserInput
+    readingTasteTags?: ReadingTasteTagCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutAccountsInput = {
@@ -23422,6 +24856,7 @@ export namespace Prisma {
     goodreadsImports?: GoodreadsImportUncheckedCreateNestedManyWithoutUserInput
     ratings?: RatingUncheckedCreateNestedManyWithoutUserInput
     reviews?: ReviewUncheckedCreateNestedManyWithoutUserInput
+    readingTasteTags?: ReadingTasteTagUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutAccountsInput = {
@@ -23459,6 +24894,7 @@ export namespace Prisma {
     goodreadsImports?: GoodreadsImportUpdateManyWithoutUserNestedInput
     ratings?: RatingUpdateManyWithoutUserNestedInput
     reviews?: ReviewUpdateManyWithoutUserNestedInput
+    readingTasteTags?: ReadingTasteTagUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutAccountsInput = {
@@ -23480,6 +24916,7 @@ export namespace Prisma {
     goodreadsImports?: GoodreadsImportUncheckedUpdateManyWithoutUserNestedInput
     ratings?: RatingUncheckedUpdateManyWithoutUserNestedInput
     reviews?: ReviewUncheckedUpdateManyWithoutUserNestedInput
+    readingTasteTags?: ReadingTasteTagUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateWithoutSessionsInput = {
@@ -23501,6 +24938,7 @@ export namespace Prisma {
     goodreadsImports?: GoodreadsImportCreateNestedManyWithoutUserInput
     ratings?: RatingCreateNestedManyWithoutUserInput
     reviews?: ReviewCreateNestedManyWithoutUserInput
+    readingTasteTags?: ReadingTasteTagCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutSessionsInput = {
@@ -23522,6 +24960,7 @@ export namespace Prisma {
     goodreadsImports?: GoodreadsImportUncheckedCreateNestedManyWithoutUserInput
     ratings?: RatingUncheckedCreateNestedManyWithoutUserInput
     reviews?: ReviewUncheckedCreateNestedManyWithoutUserInput
+    readingTasteTags?: ReadingTasteTagUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutSessionsInput = {
@@ -23559,6 +24998,7 @@ export namespace Prisma {
     goodreadsImports?: GoodreadsImportUpdateManyWithoutUserNestedInput
     ratings?: RatingUpdateManyWithoutUserNestedInput
     reviews?: ReviewUpdateManyWithoutUserNestedInput
+    readingTasteTags?: ReadingTasteTagUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutSessionsInput = {
@@ -23580,6 +25020,7 @@ export namespace Prisma {
     goodreadsImports?: GoodreadsImportUncheckedUpdateManyWithoutUserNestedInput
     ratings?: RatingUncheckedUpdateManyWithoutUserNestedInput
     reviews?: ReviewUncheckedUpdateManyWithoutUserNestedInput
+    readingTasteTags?: ReadingTasteTagUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type AccountCreateWithoutUserInput = {
@@ -23861,6 +25302,32 @@ export namespace Prisma {
 
   export type ReviewCreateManyUserInputEnvelope = {
     data: ReviewCreateManyUserInput | ReviewCreateManyUserInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type ReadingTasteTagCreateWithoutUserInput = {
+    id?: string
+    label: string
+    source: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ReadingTasteTagUncheckedCreateWithoutUserInput = {
+    id?: string
+    label: string
+    source: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ReadingTasteTagCreateOrConnectWithoutUserInput = {
+    where: ReadingTasteTagWhereUniqueInput
+    create: XOR<ReadingTasteTagCreateWithoutUserInput, ReadingTasteTagUncheckedCreateWithoutUserInput>
+  }
+
+  export type ReadingTasteTagCreateManyUserInputEnvelope = {
+    data: ReadingTasteTagCreateManyUserInput | ReadingTasteTagCreateManyUserInput[]
     skipDuplicates?: boolean
   }
 
@@ -24148,6 +25615,34 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"Review"> | Date | string
   }
 
+  export type ReadingTasteTagUpsertWithWhereUniqueWithoutUserInput = {
+    where: ReadingTasteTagWhereUniqueInput
+    update: XOR<ReadingTasteTagUpdateWithoutUserInput, ReadingTasteTagUncheckedUpdateWithoutUserInput>
+    create: XOR<ReadingTasteTagCreateWithoutUserInput, ReadingTasteTagUncheckedCreateWithoutUserInput>
+  }
+
+  export type ReadingTasteTagUpdateWithWhereUniqueWithoutUserInput = {
+    where: ReadingTasteTagWhereUniqueInput
+    data: XOR<ReadingTasteTagUpdateWithoutUserInput, ReadingTasteTagUncheckedUpdateWithoutUserInput>
+  }
+
+  export type ReadingTasteTagUpdateManyWithWhereWithoutUserInput = {
+    where: ReadingTasteTagScalarWhereInput
+    data: XOR<ReadingTasteTagUpdateManyMutationInput, ReadingTasteTagUncheckedUpdateManyWithoutUserInput>
+  }
+
+  export type ReadingTasteTagScalarWhereInput = {
+    AND?: ReadingTasteTagScalarWhereInput | ReadingTasteTagScalarWhereInput[]
+    OR?: ReadingTasteTagScalarWhereInput[]
+    NOT?: ReadingTasteTagScalarWhereInput | ReadingTasteTagScalarWhereInput[]
+    id?: StringFilter<"ReadingTasteTag"> | string
+    userId?: StringFilter<"ReadingTasteTag"> | string
+    label?: StringFilter<"ReadingTasteTag"> | string
+    source?: StringFilter<"ReadingTasteTag"> | string
+    createdAt?: DateTimeFilter<"ReadingTasteTag"> | Date | string
+    updatedAt?: DateTimeFilter<"ReadingTasteTag"> | Date | string
+  }
+
   export type UserCreateWithoutGroupsCreatedInput = {
     id?: string
     name?: string | null
@@ -24167,6 +25662,7 @@ export namespace Prisma {
     goodreadsImports?: GoodreadsImportCreateNestedManyWithoutUserInput
     ratings?: RatingCreateNestedManyWithoutUserInput
     reviews?: ReviewCreateNestedManyWithoutUserInput
+    readingTasteTags?: ReadingTasteTagCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutGroupsCreatedInput = {
@@ -24188,6 +25684,7 @@ export namespace Prisma {
     goodreadsImports?: GoodreadsImportUncheckedCreateNestedManyWithoutUserInput
     ratings?: RatingUncheckedCreateNestedManyWithoutUserInput
     reviews?: ReviewUncheckedCreateNestedManyWithoutUserInput
+    readingTasteTags?: ReadingTasteTagUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutGroupsCreatedInput = {
@@ -24323,6 +25820,7 @@ export namespace Prisma {
     goodreadsImports?: GoodreadsImportUpdateManyWithoutUserNestedInput
     ratings?: RatingUpdateManyWithoutUserNestedInput
     reviews?: ReviewUpdateManyWithoutUserNestedInput
+    readingTasteTags?: ReadingTasteTagUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutGroupsCreatedInput = {
@@ -24344,6 +25842,7 @@ export namespace Prisma {
     goodreadsImports?: GoodreadsImportUncheckedUpdateManyWithoutUserNestedInput
     ratings?: RatingUncheckedUpdateManyWithoutUserNestedInput
     reviews?: ReviewUncheckedUpdateManyWithoutUserNestedInput
+    readingTasteTags?: ReadingTasteTagUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type GroupMemberUpsertWithWhereUniqueWithoutGroupInput = {
@@ -24455,6 +25954,7 @@ export namespace Prisma {
     goodreadsImports?: GoodreadsImportCreateNestedManyWithoutUserInput
     ratings?: RatingCreateNestedManyWithoutUserInput
     reviews?: ReviewCreateNestedManyWithoutUserInput
+    readingTasteTags?: ReadingTasteTagCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutMembershipsInput = {
@@ -24476,6 +25976,7 @@ export namespace Prisma {
     goodreadsImports?: GoodreadsImportUncheckedCreateNestedManyWithoutUserInput
     ratings?: RatingUncheckedCreateNestedManyWithoutUserInput
     reviews?: ReviewUncheckedCreateNestedManyWithoutUserInput
+    readingTasteTags?: ReadingTasteTagUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutMembershipsInput = {
@@ -24546,6 +26047,7 @@ export namespace Prisma {
     goodreadsImports?: GoodreadsImportUpdateManyWithoutUserNestedInput
     ratings?: RatingUpdateManyWithoutUserNestedInput
     reviews?: ReviewUpdateManyWithoutUserNestedInput
+    readingTasteTags?: ReadingTasteTagUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutMembershipsInput = {
@@ -24567,6 +26069,7 @@ export namespace Prisma {
     goodreadsImports?: GoodreadsImportUncheckedUpdateManyWithoutUserNestedInput
     ratings?: RatingUncheckedUpdateManyWithoutUserNestedInput
     reviews?: ReviewUncheckedUpdateManyWithoutUserNestedInput
+    readingTasteTags?: ReadingTasteTagUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type PollChoiceCreateWithoutBookInput = {
@@ -24736,6 +26239,7 @@ export namespace Prisma {
     votes?: VoteCreateNestedManyWithoutUserInput
     ratings?: RatingCreateNestedManyWithoutUserInput
     reviews?: ReviewCreateNestedManyWithoutUserInput
+    readingTasteTags?: ReadingTasteTagCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutGoodreadsImportsInput = {
@@ -24757,6 +26261,7 @@ export namespace Prisma {
     votes?: VoteUncheckedCreateNestedManyWithoutUserInput
     ratings?: RatingUncheckedCreateNestedManyWithoutUserInput
     reviews?: ReviewUncheckedCreateNestedManyWithoutUserInput
+    readingTasteTags?: ReadingTasteTagUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutGoodreadsImportsInput = {
@@ -24794,6 +26299,7 @@ export namespace Prisma {
     votes?: VoteUpdateManyWithoutUserNestedInput
     ratings?: RatingUpdateManyWithoutUserNestedInput
     reviews?: ReviewUpdateManyWithoutUserNestedInput
+    readingTasteTags?: ReadingTasteTagUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutGoodreadsImportsInput = {
@@ -24815,6 +26321,7 @@ export namespace Prisma {
     votes?: VoteUncheckedUpdateManyWithoutUserNestedInput
     ratings?: RatingUncheckedUpdateManyWithoutUserNestedInput
     reviews?: ReviewUncheckedUpdateManyWithoutUserNestedInput
+    readingTasteTags?: ReadingTasteTagUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type GroupCreateWithoutPollsInput = {
@@ -24863,6 +26370,7 @@ export namespace Prisma {
     goodreadsImports?: GoodreadsImportCreateNestedManyWithoutUserInput
     ratings?: RatingCreateNestedManyWithoutUserInput
     reviews?: ReviewCreateNestedManyWithoutUserInput
+    readingTasteTags?: ReadingTasteTagCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutPollsCreatedInput = {
@@ -24884,6 +26392,7 @@ export namespace Prisma {
     goodreadsImports?: GoodreadsImportUncheckedCreateNestedManyWithoutUserInput
     ratings?: RatingUncheckedCreateNestedManyWithoutUserInput
     reviews?: ReviewUncheckedCreateNestedManyWithoutUserInput
+    readingTasteTags?: ReadingTasteTagUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutPollsCreatedInput = {
@@ -25071,6 +26580,7 @@ export namespace Prisma {
     goodreadsImports?: GoodreadsImportUpdateManyWithoutUserNestedInput
     ratings?: RatingUpdateManyWithoutUserNestedInput
     reviews?: ReviewUpdateManyWithoutUserNestedInput
+    readingTasteTags?: ReadingTasteTagUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutPollsCreatedInput = {
@@ -25092,6 +26602,7 @@ export namespace Prisma {
     goodreadsImports?: GoodreadsImportUncheckedUpdateManyWithoutUserNestedInput
     ratings?: RatingUncheckedUpdateManyWithoutUserNestedInput
     reviews?: ReviewUncheckedUpdateManyWithoutUserNestedInput
+    readingTasteTags?: ReadingTasteTagUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type PollChoiceUpsertWithWhereUniqueWithoutPollInput = {
@@ -25262,6 +26773,7 @@ export namespace Prisma {
     goodreadsImports?: GoodreadsImportCreateNestedManyWithoutUserInput
     ratings?: RatingCreateNestedManyWithoutUserInput
     reviews?: ReviewCreateNestedManyWithoutUserInput
+    readingTasteTags?: ReadingTasteTagCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutPollChoicesAddedInput = {
@@ -25283,6 +26795,7 @@ export namespace Prisma {
     goodreadsImports?: GoodreadsImportUncheckedCreateNestedManyWithoutUserInput
     ratings?: RatingUncheckedCreateNestedManyWithoutUserInput
     reviews?: ReviewUncheckedCreateNestedManyWithoutUserInput
+    readingTasteTags?: ReadingTasteTagUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutPollChoicesAddedInput = {
@@ -25420,6 +26933,7 @@ export namespace Prisma {
     goodreadsImports?: GoodreadsImportUpdateManyWithoutUserNestedInput
     ratings?: RatingUpdateManyWithoutUserNestedInput
     reviews?: ReviewUpdateManyWithoutUserNestedInput
+    readingTasteTags?: ReadingTasteTagUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutPollChoicesAddedInput = {
@@ -25441,6 +26955,7 @@ export namespace Prisma {
     goodreadsImports?: GoodreadsImportUncheckedUpdateManyWithoutUserNestedInput
     ratings?: RatingUncheckedUpdateManyWithoutUserNestedInput
     reviews?: ReviewUncheckedUpdateManyWithoutUserNestedInput
+    readingTasteTags?: ReadingTasteTagUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type VoteUpsertWithWhereUniqueWithoutChoiceInput = {
@@ -25532,6 +27047,7 @@ export namespace Prisma {
     goodreadsImports?: GoodreadsImportCreateNestedManyWithoutUserInput
     ratings?: RatingCreateNestedManyWithoutUserInput
     reviews?: ReviewCreateNestedManyWithoutUserInput
+    readingTasteTags?: ReadingTasteTagCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutVotesInput = {
@@ -25553,6 +27069,7 @@ export namespace Prisma {
     goodreadsImports?: GoodreadsImportUncheckedCreateNestedManyWithoutUserInput
     ratings?: RatingUncheckedCreateNestedManyWithoutUserInput
     reviews?: ReviewUncheckedCreateNestedManyWithoutUserInput
+    readingTasteTags?: ReadingTasteTagUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutVotesInput = {
@@ -25656,6 +27173,7 @@ export namespace Prisma {
     goodreadsImports?: GoodreadsImportUpdateManyWithoutUserNestedInput
     ratings?: RatingUpdateManyWithoutUserNestedInput
     reviews?: ReviewUpdateManyWithoutUserNestedInput
+    readingTasteTags?: ReadingTasteTagUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutVotesInput = {
@@ -25677,6 +27195,7 @@ export namespace Prisma {
     goodreadsImports?: GoodreadsImportUncheckedUpdateManyWithoutUserNestedInput
     ratings?: RatingUncheckedUpdateManyWithoutUserNestedInput
     reviews?: ReviewUncheckedUpdateManyWithoutUserNestedInput
+    readingTasteTags?: ReadingTasteTagUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type GroupCreateWithoutReadingRoundsInput = {
@@ -26011,6 +27530,7 @@ export namespace Prisma {
     votes?: VoteCreateNestedManyWithoutUserInput
     goodreadsImports?: GoodreadsImportCreateNestedManyWithoutUserInput
     reviews?: ReviewCreateNestedManyWithoutUserInput
+    readingTasteTags?: ReadingTasteTagCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutRatingsInput = {
@@ -26032,6 +27552,7 @@ export namespace Prisma {
     votes?: VoteUncheckedCreateNestedManyWithoutUserInput
     goodreadsImports?: GoodreadsImportUncheckedCreateNestedManyWithoutUserInput
     reviews?: ReviewUncheckedCreateNestedManyWithoutUserInput
+    readingTasteTags?: ReadingTasteTagUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutRatingsInput = {
@@ -26106,6 +27627,7 @@ export namespace Prisma {
     votes?: VoteUpdateManyWithoutUserNestedInput
     goodreadsImports?: GoodreadsImportUpdateManyWithoutUserNestedInput
     reviews?: ReviewUpdateManyWithoutUserNestedInput
+    readingTasteTags?: ReadingTasteTagUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutRatingsInput = {
@@ -26127,6 +27649,7 @@ export namespace Prisma {
     votes?: VoteUncheckedUpdateManyWithoutUserNestedInput
     goodreadsImports?: GoodreadsImportUncheckedUpdateManyWithoutUserNestedInput
     reviews?: ReviewUncheckedUpdateManyWithoutUserNestedInput
+    readingTasteTags?: ReadingTasteTagUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type ReadingRoundCreateWithoutReviewsInput = {
@@ -26179,6 +27702,7 @@ export namespace Prisma {
     votes?: VoteCreateNestedManyWithoutUserInput
     goodreadsImports?: GoodreadsImportCreateNestedManyWithoutUserInput
     ratings?: RatingCreateNestedManyWithoutUserInput
+    readingTasteTags?: ReadingTasteTagCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutReviewsInput = {
@@ -26200,6 +27724,7 @@ export namespace Prisma {
     votes?: VoteUncheckedCreateNestedManyWithoutUserInput
     goodreadsImports?: GoodreadsImportUncheckedCreateNestedManyWithoutUserInput
     ratings?: RatingUncheckedCreateNestedManyWithoutUserInput
+    readingTasteTags?: ReadingTasteTagUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutReviewsInput = {
@@ -26274,6 +27799,7 @@ export namespace Prisma {
     votes?: VoteUpdateManyWithoutUserNestedInput
     goodreadsImports?: GoodreadsImportUpdateManyWithoutUserNestedInput
     ratings?: RatingUpdateManyWithoutUserNestedInput
+    readingTasteTags?: ReadingTasteTagUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutReviewsInput = {
@@ -26295,6 +27821,111 @@ export namespace Prisma {
     votes?: VoteUncheckedUpdateManyWithoutUserNestedInput
     goodreadsImports?: GoodreadsImportUncheckedUpdateManyWithoutUserNestedInput
     ratings?: RatingUncheckedUpdateManyWithoutUserNestedInput
+    readingTasteTags?: ReadingTasteTagUncheckedUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserCreateWithoutReadingTasteTagsInput = {
+    id?: string
+    name?: string | null
+    email?: string | null
+    emailVerified?: Date | string | null
+    password?: string | null
+    image?: string | null
+    avatarUrl?: string | null
+    profileText?: string | null
+    createdAt?: Date | string
+    accounts?: AccountCreateNestedManyWithoutUserInput
+    sessions?: SessionCreateNestedManyWithoutUserInput
+    groupsCreated?: GroupCreateNestedManyWithoutCreatedByInput
+    memberships?: GroupMemberCreateNestedManyWithoutUserInput
+    pollsCreated?: PollCreateNestedManyWithoutCreatedByInput
+    pollChoicesAdded?: PollChoiceCreateNestedManyWithoutAddedByInput
+    votes?: VoteCreateNestedManyWithoutUserInput
+    goodreadsImports?: GoodreadsImportCreateNestedManyWithoutUserInput
+    ratings?: RatingCreateNestedManyWithoutUserInput
+    reviews?: ReviewCreateNestedManyWithoutUserInput
+  }
+
+  export type UserUncheckedCreateWithoutReadingTasteTagsInput = {
+    id?: string
+    name?: string | null
+    email?: string | null
+    emailVerified?: Date | string | null
+    password?: string | null
+    image?: string | null
+    avatarUrl?: string | null
+    profileText?: string | null
+    createdAt?: Date | string
+    accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
+    sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
+    groupsCreated?: GroupUncheckedCreateNestedManyWithoutCreatedByInput
+    memberships?: GroupMemberUncheckedCreateNestedManyWithoutUserInput
+    pollsCreated?: PollUncheckedCreateNestedManyWithoutCreatedByInput
+    pollChoicesAdded?: PollChoiceUncheckedCreateNestedManyWithoutAddedByInput
+    votes?: VoteUncheckedCreateNestedManyWithoutUserInput
+    goodreadsImports?: GoodreadsImportUncheckedCreateNestedManyWithoutUserInput
+    ratings?: RatingUncheckedCreateNestedManyWithoutUserInput
+    reviews?: ReviewUncheckedCreateNestedManyWithoutUserInput
+  }
+
+  export type UserCreateOrConnectWithoutReadingTasteTagsInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutReadingTasteTagsInput, UserUncheckedCreateWithoutReadingTasteTagsInput>
+  }
+
+  export type UserUpsertWithoutReadingTasteTagsInput = {
+    update: XOR<UserUpdateWithoutReadingTasteTagsInput, UserUncheckedUpdateWithoutReadingTasteTagsInput>
+    create: XOR<UserCreateWithoutReadingTasteTagsInput, UserUncheckedCreateWithoutReadingTasteTagsInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutReadingTasteTagsInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutReadingTasteTagsInput, UserUncheckedUpdateWithoutReadingTasteTagsInput>
+  }
+
+  export type UserUpdateWithoutReadingTasteTagsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    profileText?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    accounts?: AccountUpdateManyWithoutUserNestedInput
+    sessions?: SessionUpdateManyWithoutUserNestedInput
+    groupsCreated?: GroupUpdateManyWithoutCreatedByNestedInput
+    memberships?: GroupMemberUpdateManyWithoutUserNestedInput
+    pollsCreated?: PollUpdateManyWithoutCreatedByNestedInput
+    pollChoicesAdded?: PollChoiceUpdateManyWithoutAddedByNestedInput
+    votes?: VoteUpdateManyWithoutUserNestedInput
+    goodreadsImports?: GoodreadsImportUpdateManyWithoutUserNestedInput
+    ratings?: RatingUpdateManyWithoutUserNestedInput
+    reviews?: ReviewUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutReadingTasteTagsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    profileText?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
+    sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
+    groupsCreated?: GroupUncheckedUpdateManyWithoutCreatedByNestedInput
+    memberships?: GroupMemberUncheckedUpdateManyWithoutUserNestedInput
+    pollsCreated?: PollUncheckedUpdateManyWithoutCreatedByNestedInput
+    pollChoicesAdded?: PollChoiceUncheckedUpdateManyWithoutAddedByNestedInput
+    votes?: VoteUncheckedUpdateManyWithoutUserNestedInput
+    goodreadsImports?: GoodreadsImportUncheckedUpdateManyWithoutUserNestedInput
+    ratings?: RatingUncheckedUpdateManyWithoutUserNestedInput
+    reviews?: ReviewUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type AccountCreateManyUserInput = {
@@ -26377,6 +28008,14 @@ export namespace Prisma {
     id?: string
     readingRoundId: string
     reviewText: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ReadingTasteTagCreateManyUserInput = {
+    id?: string
+    label: string
+    source: string
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -26643,6 +28282,30 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     readingRoundId?: StringFieldUpdateOperationsInput | string
     reviewText?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ReadingTasteTagUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    source?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ReadingTasteTagUncheckedUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    source?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ReadingTasteTagUncheckedUpdateManyWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    label?: StringFieldUpdateOperationsInput | string
+    source?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }

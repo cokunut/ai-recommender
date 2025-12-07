@@ -63,6 +63,7 @@ model User {
     goodreadsImports  GoodreadsImport[] @relation("GoodreadsImportUser")
     ratings           Rating[]
     reviews           Review[]
+    readingTasteTags  ReadingTasteTag[]
 }
 
 model VerificationToken {
