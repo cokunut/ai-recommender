@@ -261,6 +261,7 @@ exports.Prisma.ReadingTasteTagScalarFieldEnum = {
   userId: 'userId',
   label: 'label',
   source: 'source',
+  preference: 'preference',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -328,6 +329,11 @@ exports.ReadingRoundStatus = exports.$Enums.ReadingRoundStatus = {
   VOTING: 'VOTING',
   READING: 'READING',
   FINISHED: 'FINISHED'
+};
+
+exports.TagPreference = exports.$Enums.TagPreference = {
+  LIKE: 'LIKE',
+  DISLIKE: 'DISLIKE'
 };
 
 exports.Prisma.ModelName = {

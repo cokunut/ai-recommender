@@ -114,6 +114,11 @@ enum ReadingRoundStatus {
   FINISHED
 }
 
+enum TagPreference {
+  LIKE
+  DISLIKE
+}
+
 model Group {
   id              String         @id @default(cuid())
   name            String
@@ -269,12 +274,13 @@ model Review {
 }
 
 model ReadingTasteTag {
-  id        String   @id @default(cuid())
-  userId    String
-  label     String
-  source    String // "ai" or "user"
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String        @id @default(cuid())
+  userId     String
+  label      String
+  source     String // "ai" or "user"
+  preference TagPreference @default(LIKE)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

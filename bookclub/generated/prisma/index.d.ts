@@ -146,6 +146,14 @@ export const ReadingRoundStatus: {
 
 export type ReadingRoundStatus = (typeof ReadingRoundStatus)[keyof typeof ReadingRoundStatus]
 
+
+export const TagPreference: {
+  LIKE: 'LIKE',
+  DISLIKE: 'DISLIKE'
+};
+
+export type TagPreference = (typeof TagPreference)[keyof typeof TagPreference]
+
 }
 
 export type GovernanceMode = $Enums.GovernanceMode
@@ -171,6 +179,10 @@ export const GoodreadsImportStatus: typeof $Enums.GoodreadsImportStatus
 export type ReadingRoundStatus = $Enums.ReadingRoundStatus
 
 export const ReadingRoundStatus: typeof $Enums.ReadingRoundStatus
+
+export type TagPreference = $Enums.TagPreference
+
+export const TagPreference: typeof $Enums.TagPreference
 
 /**
  * ##  Prisma Client ʲˢ
@@ -18501,6 +18513,7 @@ export namespace Prisma {
     userId: string | null
     label: string | null
     source: string | null
+    preference: $Enums.TagPreference | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -18510,6 +18523,7 @@ export namespace Prisma {
     userId: string | null
     label: string | null
     source: string | null
+    preference: $Enums.TagPreference | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -18519,6 +18533,7 @@ export namespace Prisma {
     userId: number
     label: number
     source: number
+    preference: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -18530,6 +18545,7 @@ export namespace Prisma {
     userId?: true
     label?: true
     source?: true
+    preference?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -18539,6 +18555,7 @@ export namespace Prisma {
     userId?: true
     label?: true
     source?: true
+    preference?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -18548,6 +18565,7 @@ export namespace Prisma {
     userId?: true
     label?: true
     source?: true
+    preference?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -18630,6 +18648,7 @@ export namespace Prisma {
     userId: string
     label: string
     source: string
+    preference: $Enums.TagPreference
     createdAt: Date
     updatedAt: Date
     _count: ReadingTasteTagCountAggregateOutputType | null
@@ -18656,6 +18675,7 @@ export namespace Prisma {
     userId?: boolean
     label?: boolean
     source?: boolean
+    preference?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
@@ -18666,6 +18686,7 @@ export namespace Prisma {
     userId?: boolean
     label?: boolean
     source?: boolean
+    preference?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
@@ -18676,6 +18697,7 @@ export namespace Prisma {
     userId?: boolean
     label?: boolean
     source?: boolean
+    preference?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
@@ -18686,11 +18708,12 @@ export namespace Prisma {
     userId?: boolean
     label?: boolean
     source?: boolean
+    preference?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type ReadingTasteTagOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "label" | "source" | "createdAt" | "updatedAt", ExtArgs["result"]["readingTasteTag"]>
+  export type ReadingTasteTagOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "label" | "source" | "preference" | "createdAt" | "updatedAt", ExtArgs["result"]["readingTasteTag"]>
   export type ReadingTasteTagInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
   }
@@ -18711,6 +18734,7 @@ export namespace Prisma {
       userId: string
       label: string
       source: string
+      preference: $Enums.TagPreference
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["readingTasteTag"]>
@@ -19141,6 +19165,7 @@ export namespace Prisma {
     readonly userId: FieldRef<"ReadingTasteTag", 'String'>
     readonly label: FieldRef<"ReadingTasteTag", 'String'>
     readonly source: FieldRef<"ReadingTasteTag", 'String'>
+    readonly preference: FieldRef<"ReadingTasteTag", 'TagPreference'>
     readonly createdAt: FieldRef<"ReadingTasteTag", 'DateTime'>
     readonly updatedAt: FieldRef<"ReadingTasteTag", 'DateTime'>
   }
@@ -19753,6 +19778,7 @@ export namespace Prisma {
     userId: 'userId',
     label: 'label',
     source: 'source',
+    preference: 'preference',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -19950,6 +19976,20 @@ export namespace Prisma {
    * Reference to a field of type 'ReadingRoundStatus[]'
    */
   export type ListEnumReadingRoundStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ReadingRoundStatus[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'TagPreference'
+   */
+  export type EnumTagPreferenceFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TagPreference'>
+    
+
+
+  /**
+   * Reference to a field of type 'TagPreference[]'
+   */
+  export type ListEnumTagPreferenceFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TagPreference[]'>
     
 
 
@@ -20969,6 +21009,7 @@ export namespace Prisma {
     userId?: StringFilter<"ReadingTasteTag"> | string
     label?: StringFilter<"ReadingTasteTag"> | string
     source?: StringFilter<"ReadingTasteTag"> | string
+    preference?: EnumTagPreferenceFilter<"ReadingTasteTag"> | $Enums.TagPreference
     createdAt?: DateTimeFilter<"ReadingTasteTag"> | Date | string
     updatedAt?: DateTimeFilter<"ReadingTasteTag"> | Date | string
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
@@ -20979,6 +21020,7 @@ export namespace Prisma {
     userId?: SortOrder
     label?: SortOrder
     source?: SortOrder
+    preference?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     user?: UserOrderByWithRelationInput
@@ -20992,6 +21034,7 @@ export namespace Prisma {
     userId?: StringFilter<"ReadingTasteTag"> | string
     label?: StringFilter<"ReadingTasteTag"> | string
     source?: StringFilter<"ReadingTasteTag"> | string
+    preference?: EnumTagPreferenceFilter<"ReadingTasteTag"> | $Enums.TagPreference
     createdAt?: DateTimeFilter<"ReadingTasteTag"> | Date | string
     updatedAt?: DateTimeFilter<"ReadingTasteTag"> | Date | string
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
@@ -21002,6 +21045,7 @@ export namespace Prisma {
     userId?: SortOrder
     label?: SortOrder
     source?: SortOrder
+    preference?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: ReadingTasteTagCountOrderByAggregateInput
@@ -21017,6 +21061,7 @@ export namespace Prisma {
     userId?: StringWithAggregatesFilter<"ReadingTasteTag"> | string
     label?: StringWithAggregatesFilter<"ReadingTasteTag"> | string
     source?: StringWithAggregatesFilter<"ReadingTasteTag"> | string
+    preference?: EnumTagPreferenceWithAggregatesFilter<"ReadingTasteTag"> | $Enums.TagPreference
     createdAt?: DateTimeWithAggregatesFilter<"ReadingTasteTag"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"ReadingTasteTag"> | Date | string
   }
@@ -22040,6 +22085,7 @@ export namespace Prisma {
     id?: string
     label: string
     source: string
+    preference?: $Enums.TagPreference
     createdAt?: Date | string
     updatedAt?: Date | string
     user: UserCreateNestedOneWithoutReadingTasteTagsInput
@@ -22050,6 +22096,7 @@ export namespace Prisma {
     userId: string
     label: string
     source: string
+    preference?: $Enums.TagPreference
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -22058,6 +22105,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     label?: StringFieldUpdateOperationsInput | string
     source?: StringFieldUpdateOperationsInput | string
+    preference?: EnumTagPreferenceFieldUpdateOperationsInput | $Enums.TagPreference
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutReadingTasteTagsNestedInput
@@ -22068,6 +22116,7 @@ export namespace Prisma {
     userId?: StringFieldUpdateOperationsInput | string
     label?: StringFieldUpdateOperationsInput | string
     source?: StringFieldUpdateOperationsInput | string
+    preference?: EnumTagPreferenceFieldUpdateOperationsInput | $Enums.TagPreference
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -22077,6 +22126,7 @@ export namespace Prisma {
     userId: string
     label: string
     source: string
+    preference?: $Enums.TagPreference
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -22085,6 +22135,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     label?: StringFieldUpdateOperationsInput | string
     source?: StringFieldUpdateOperationsInput | string
+    preference?: EnumTagPreferenceFieldUpdateOperationsInput | $Enums.TagPreference
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -22094,6 +22145,7 @@ export namespace Prisma {
     userId?: StringFieldUpdateOperationsInput | string
     label?: StringFieldUpdateOperationsInput | string
     source?: StringFieldUpdateOperationsInput | string
+    preference?: EnumTagPreferenceFieldUpdateOperationsInput | $Enums.TagPreference
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -23100,11 +23152,19 @@ export namespace Prisma {
     updatedAt?: SortOrder
   }
 
+  export type EnumTagPreferenceFilter<$PrismaModel = never> = {
+    equals?: $Enums.TagPreference | EnumTagPreferenceFieldRefInput<$PrismaModel>
+    in?: $Enums.TagPreference[] | ListEnumTagPreferenceFieldRefInput<$PrismaModel>
+    notIn?: $Enums.TagPreference[] | ListEnumTagPreferenceFieldRefInput<$PrismaModel>
+    not?: NestedEnumTagPreferenceFilter<$PrismaModel> | $Enums.TagPreference
+  }
+
   export type ReadingTasteTagCountOrderByAggregateInput = {
     id?: SortOrder
     userId?: SortOrder
     label?: SortOrder
     source?: SortOrder
+    preference?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -23114,6 +23174,7 @@ export namespace Prisma {
     userId?: SortOrder
     label?: SortOrder
     source?: SortOrder
+    preference?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -23123,8 +23184,19 @@ export namespace Prisma {
     userId?: SortOrder
     label?: SortOrder
     source?: SortOrder
+    preference?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+  }
+
+  export type EnumTagPreferenceWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.TagPreference | EnumTagPreferenceFieldRefInput<$PrismaModel>
+    in?: $Enums.TagPreference[] | ListEnumTagPreferenceFieldRefInput<$PrismaModel>
+    notIn?: $Enums.TagPreference[] | ListEnumTagPreferenceFieldRefInput<$PrismaModel>
+    not?: NestedEnumTagPreferenceWithAggregatesFilter<$PrismaModel> | $Enums.TagPreference
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumTagPreferenceFilter<$PrismaModel>
+    _max?: NestedEnumTagPreferenceFilter<$PrismaModel>
   }
 
   export type UserCreateNestedOneWithoutAccountsInput = {
@@ -24471,6 +24543,10 @@ export namespace Prisma {
     connect?: UserWhereUniqueInput
   }
 
+  export type EnumTagPreferenceFieldUpdateOperationsInput = {
+    set?: $Enums.TagPreference
+  }
+
   export type UserUpdateOneRequiredWithoutReadingTasteTagsNestedInput = {
     create?: XOR<UserCreateWithoutReadingTasteTagsInput, UserUncheckedCreateWithoutReadingTasteTagsInput>
     connectOrCreate?: UserCreateOrConnectWithoutReadingTasteTagsInput
@@ -24813,6 +24889,23 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumReadingRoundStatusFilter<$PrismaModel>
     _max?: NestedEnumReadingRoundStatusFilter<$PrismaModel>
+  }
+
+  export type NestedEnumTagPreferenceFilter<$PrismaModel = never> = {
+    equals?: $Enums.TagPreference | EnumTagPreferenceFieldRefInput<$PrismaModel>
+    in?: $Enums.TagPreference[] | ListEnumTagPreferenceFieldRefInput<$PrismaModel>
+    notIn?: $Enums.TagPreference[] | ListEnumTagPreferenceFieldRefInput<$PrismaModel>
+    not?: NestedEnumTagPreferenceFilter<$PrismaModel> | $Enums.TagPreference
+  }
+
+  export type NestedEnumTagPreferenceWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.TagPreference | EnumTagPreferenceFieldRefInput<$PrismaModel>
+    in?: $Enums.TagPreference[] | ListEnumTagPreferenceFieldRefInput<$PrismaModel>
+    notIn?: $Enums.TagPreference[] | ListEnumTagPreferenceFieldRefInput<$PrismaModel>
+    not?: NestedEnumTagPreferenceWithAggregatesFilter<$PrismaModel> | $Enums.TagPreference
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumTagPreferenceFilter<$PrismaModel>
+    _max?: NestedEnumTagPreferenceFilter<$PrismaModel>
   }
 
   export type UserCreateWithoutAccountsInput = {
@@ -25309,6 +25402,7 @@ export namespace Prisma {
     id?: string
     label: string
     source: string
+    preference?: $Enums.TagPreference
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -25317,6 +25411,7 @@ export namespace Prisma {
     id?: string
     label: string
     source: string
+    preference?: $Enums.TagPreference
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -25639,6 +25734,7 @@ export namespace Prisma {
     userId?: StringFilter<"ReadingTasteTag"> | string
     label?: StringFilter<"ReadingTasteTag"> | string
     source?: StringFilter<"ReadingTasteTag"> | string
+    preference?: EnumTagPreferenceFilter<"ReadingTasteTag"> | $Enums.TagPreference
     createdAt?: DateTimeFilter<"ReadingTasteTag"> | Date | string
     updatedAt?: DateTimeFilter<"ReadingTasteTag"> | Date | string
   }
@@ -28016,6 +28112,7 @@ export namespace Prisma {
     id?: string
     label: string
     source: string
+    preference?: $Enums.TagPreference
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -28290,6 +28387,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     label?: StringFieldUpdateOperationsInput | string
     source?: StringFieldUpdateOperationsInput | string
+    preference?: EnumTagPreferenceFieldUpdateOperationsInput | $Enums.TagPreference
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -28298,6 +28396,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     label?: StringFieldUpdateOperationsInput | string
     source?: StringFieldUpdateOperationsInput | string
+    preference?: EnumTagPreferenceFieldUpdateOperationsInput | $Enums.TagPreference
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -28306,6 +28405,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     label?: StringFieldUpdateOperationsInput | string
     source?: StringFieldUpdateOperationsInput | string
+    preference?: EnumTagPreferenceFieldUpdateOperationsInput | $Enums.TagPreference
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }

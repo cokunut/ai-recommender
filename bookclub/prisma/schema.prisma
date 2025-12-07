@@ -114,6 +114,11 @@ enum ReadingRoundStatus {
   FINISHED
 }
 
+enum TagPreference {
+  LIKE
+  DISLIKE
+}
+
 model Group {
   id               String          @id @default(cuid())
   name             String
@@ -273,6 +278,7 @@ model ReadingTasteTag {
   userId    String
   label     String
   source    String   // "ai" or "user"
+  preference TagPreference @default(LIKE)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
