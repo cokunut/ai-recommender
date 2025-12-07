@@ -155,6 +155,10 @@ model Book {
   coverImageUrl  String?
   description    String?
   externalIds    Json?
+  // Vector embedding of the book description (pgvector)
+  // Prisma does not have a native vector type yet; use Unsupported("vector").
+  // Dimension chosen to match OpenAI text-embedding-3-small (1536 dims)
+  embedding      Unsupported("vector")?
   createdAt      DateTime @default(now())
   pollChoices    PollChoice[]
   winningPolls   Poll[]      @relation("WinningBook")

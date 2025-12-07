@@ -2,6 +2,7 @@ import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { env } from "~/env";
 import { TRPCError } from "@trpc/server";
+import { rankAndSelectFive } from "~/server/recommendations-core";
 
 async function getOrCreateCurrentUserId(ctx: { session: any; db: any }) {
   if (ctx.session?.user?.id) return ctx.session.user.id as string;
@@ -586,178 +587,49 @@ IMPORTANT: Return ONLY a valid JSON array with this exact structure (no markdown
         });
       }
 
-      // Generate recommendations using the existing logic
-      const group = await ctx.db.group.findUnique({
-        where: { id: input.groupId },
-        select: { id: true, name: true, description: true },
-      });
+      // New algorithm: vector search candidates from Book, filter via Goodreads, score by tags, LLM-pick 5
+      {
+        const picked = await rankAndSelectFive(ctx.db, input.groupId);
+        if (picked.length === 0) {
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "No recommendations available" });
+        }
 
-      if (!group) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Group not found" });
-      }
+        const now = new Date();
+        const endsAt = new Date(now.getTime() + 24 * 60 * 60 * 1000);
 
-      const memberships = await ctx.db.groupMember.findMany({
-        where: { groupId: input.groupId },
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              goodreadsImports: {
-                orderBy: { createdAt: "desc" },
-                select: { jsonData: true },
+        const poll = await ctx.db.poll.create({
+          data: {
+            groupId: input.groupId,
+            createdByUserId: userId,
+            selectionType: "AI_GENERATED",
+            status: "DRAFT",
+            startsAt: now,
+            endsAt,
+            choices: { create: picked.slice(0, 5).map((b) => ({ bookId: b.id, addedByUserId: userId })) },
+          },
+          include: { choices: { include: { book: true } } },
+        });
+
+        const readingRound = await ctx.db.readingRound.create({
+          data: {
+            groupId: input.groupId,
+            pollId: poll.id,
+            status: "SETUP",
+          },
+          include: {
+            poll: {
+              include: {
+                choices: { include: { book: true, votes: true } },
+                votes: true,
               },
             },
           },
-        },
-      });
-
-      const memberDetails = memberships
-        .map((m, idx) => {
-          const hasGR = m.user.goodreadsImports.length > 0;
-          return `${idx + 1}. ${m.user.name ?? "Anonymous"}\n   - ${hasGR ? "Has Goodreads data" : "No Goodreads data"}`;
-        })
-        .join("\n\n");
-
-      let prompt = `You are a book recommendation expert for book clubs. Based on the following information about a book club and its members, recommend exactly 3 books that would be perfect for this group's next reading round.\n\nBook Club Information:\n- Name: ${group.name}\n- Description: ${group.description ?? "No description provided"}\n\nMembers (${memberships.length} total):\n${memberDetails}\n\nPlease recommend exactly 3 books and return ONLY a valid JSON array with objects: {\n  "title": "Book Title",\n  "author": "Author Name",\n  "reasoning": "Why this book fits the group..."\n}`;
-
-      if (input.aiDirection) {
-        prompt += `\n\nAdditional guidance: ${input.aiDirection}`;
-      }
-
-      let books: Array<{ id: string; title: string; authors: string }> = [];
-
-      try {
-        if (!env.GROQ_API_KEY) throw new Error("GROQ_API_KEY missing");
-
-        const groqResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${env.GROQ_API_KEY}`,
-          },
-          body: JSON.stringify({
-            model: "llama-3.3-70b-versatile",
-            messages: [
-              { role: "system", content: "Return valid JSON arrays only." },
-              { role: "user", content: prompt },
-            ],
-            temperature: 0.7,
-            max_tokens: 1200,
-          }),
         });
 
-        if (!groqResponse.ok) throw new Error(await groqResponse.text());
-        const groqData = (await groqResponse.json()) as any;
-        const content: string | undefined = groqData.choices?.[0]?.message?.content;
-        if (!content) throw new Error("No content from Groq");
-
-        let recs: Array<{ title: string; author: string }> = [];
-        try {
-          const parsed = JSON.parse(content);
-          recs = Array.isArray(parsed) ? parsed : parsed.books || parsed.recommendations || [];
-        } catch {
-          const jsonMatch = content.match(/```(?:json)?\s*(\[[\s\S]*\])\s*```/);
-          if (jsonMatch) {
-            recs = JSON.parse(jsonMatch[1]!);
-          } else {
-            throw new Error("Failed to parse Groq JSON");
-          }
-        }
-
-        if (!Array.isArray(recs) || recs.length < 3) throw new Error("Invalid recs");
-
-        // Upsert or create books
-        for (const r of recs.slice(0, 3)) {
-          const title = r.title?.trim();
-          const author = r.author?.trim();
-          if (!title || !author) continue;
-          
-          // Try to fetch cover image
-          const coverImageUrl = await fetchCoverImageUrl(title, author);
-          
-          const existing = await ctx.db.book.findFirst({
-            where: { title, authors: author },
-          });
-          const book =
-            existing
-              ? await ctx.db.book.update({
-                  where: { id: existing.id },
-                  data: { coverImageUrl: coverImageUrl ?? existing.coverImageUrl },
-                })
-              : await ctx.db.book.create({ data: { title, authors: author, coverImageUrl } });
-          books.push({ id: book.id, title: book.title, authors: book.authors });
-        }
-      } catch (err) {
-        // Fallback to sample books
-        const samples = [
-          { title: "The Great Gatsby", authors: "F. Scott Fitzgerald", coverImageUrl: "https://covers.openlibrary.org/b/id/7222246-M.jpg" },
-          { title: "Pride and Prejudice", authors: "Jane Austen", coverImageUrl: "https://covers.openlibrary.org/b/id/8091016-M.jpg" },
-          { title: "1984", authors: "George Orwell", coverImageUrl: "https://covers.openlibrary.org/b/id/7222241-M.jpg" },
-        ];
-        for (const s of samples) {
-          const existing = await ctx.db.book.findFirst({
-            where: { title: s.title, authors: s.authors },
-          });
-          const book =
-            existing
-              ? await ctx.db.book.update({
-                  where: { id: existing.id },
-                  data: { coverImageUrl: s.coverImageUrl ?? existing.coverImageUrl },
-                })
-              : await ctx.db.book.create({ data: { title: s.title, authors: s.authors, coverImageUrl: s.coverImageUrl } });
-          books.push({ id: book.id, title: book.title, authors: book.authors });
-        }
+        return readingRound;
       }
 
-      if (books.length === 0) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to generate book recommendations",
-        });
-      }
-
-      // Create reading round
-      const now = new Date();
-      const endsAt = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-
-      const poll = await ctx.db.poll.create({
-        data: {
-          groupId: input.groupId,
-          createdByUserId: userId,
-          selectionType: "AI_GENERATED",
-          status: "DRAFT",
-          startsAt: now,
-          endsAt,
-          choices: {
-            create: books.map((b) => ({ bookId: b.id, addedByUserId: userId })),
-          },
-        },
-        include: { choices: { include: { book: true } } },
-      });
-
-      const readingRound = await ctx.db.readingRound.create({
-        data: {
-          groupId: input.groupId,
-          pollId: poll.id,
-          status: "SETUP",
-        },
-        include: {
-          poll: {
-            include: {
-              choices: {
-                include: {
-                  book: true,
-                  votes: true,
-                },
-              },
-              votes: true,
-            },
-          },
-        },
-      });
-
-      return readingRound;
+      // (legacy generation removed)
     }),
 
   // Add a user-generated recommendation
@@ -1230,4 +1102,3 @@ IMPORTANT: Return ONLY a valid JSON array with this exact structure (no markdown
       return { ok: true };
     }),
 });
-

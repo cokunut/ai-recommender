@@ -2,6 +2,7 @@ import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 import { env } from "~/env";
+import { rankAndSelectFive } from "~/server/recommendations-core";
 
 const GOVERNANCE = ["OWNER_ADMIN", "ALL_MEMBERS"] as const;
 
@@ -215,163 +216,30 @@ export const clubsRouter = createTRPCRouter({
       });
       if (existing) return existing;
 
-      // Use the same logic as /test-recommendations to generate 3 recs via Groq
-      let books: Array<{ id: string; title: string; authors: string }> = [];
-      try {
-        if (!env.GROQ_API_KEY) throw new Error("GROQ_API_KEY missing");
+      // New vector-based recommendations: fetch from Book table and surface 5
+      {
+        const picked = await rankAndSelectFive(ctx.db, input.id);
+        const books: Array<{ id: string; title: string; authors: string }> = picked.map((b) => ({ id: b.id, title: b.title, authors: b.authors }));
+        const startsAt = now;
+        const endsAt = new Date(now.getTime() + 24 * 60 * 60 * 1000);
 
-        const groupData = await ctx.db.group.findUnique({
-          where: { id: input.id },
-          select: { id: true, name: true, description: true },
-        });
-        const memberships = await ctx.db.groupMember.findMany({
-          where: { groupId: input.id },
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                goodreadsImports: {
-                  orderBy: { createdAt: "desc" },
-                  select: { jsonData: true },
-                },
-              },
-            },
+        const poll = await ctx.db.poll.create({
+          data: {
+            groupId: input.id,
+            createdByUserId: userId,
+            selectionType: "AI_GENERATED",
+            status: "ACTIVE",
+            startsAt,
+            endsAt,
+            choices: { create: books.slice(0, 5).map((b) => ({ bookId: b.id, addedByUserId: userId })) },
           },
+          include: { choices: { include: { book: true } } },
         });
 
-        const memberDetails = memberships
-          .map((m, idx) => {
-            const hasGR = m.user.goodreadsImports.length > 0;
-            return `${idx + 1}. ${m.user.name ?? "Anonymous"}\n   - ${hasGR ? "Has Goodreads data" : "No Goodreads data"}`;
-          })
-          .join("\n\n");
-
-        const prompt = `You are a book recommendation expert for book clubs. Based on the following information about a book club and its members, recommend exactly 3 books that would be perfect for this group's next reading round.\n\nBook Club Information:\n- Name: ${groupData?.name}\n- Description: ${groupData?.description ?? "No description provided"}\n\nMembers (${memberships.length} total):\n${memberDetails}\n\nPlease recommend exactly 3 books and return ONLY a valid JSON array with objects: {\n  "title": "Book Title",\n  "author": "Author Name"\n}`;
-
-        const groqResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${env.GROQ_API_KEY}`,
-          },
-          body: JSON.stringify({
-            model: "llama-3.3-70b-versatile",
-            messages: [
-              { role: "system", content: "Return valid JSON arrays only." },
-              { role: "user", content: prompt },
-            ],
-            temperature: 0.7,
-            max_tokens: 1200,
-          }),
-        });
-        if (!groqResponse.ok) throw new Error(await groqResponse.text());
-        const groqData = (await groqResponse.json()) as any;
-        const content: string | undefined = groqData.choices?.[0]?.message?.content;
-        if (!content) throw new Error("No content from Groq");
-        let recs: Array<{ title: string; author: string }> = [];
-        try {
-          const parsed = JSON.parse(content);
-          recs = Array.isArray(parsed) ? parsed : parsed.books || parsed.recommendations || [];
-        } catch {
-          const jsonMatch = content.match(/```(?:json)?\s*(\[[\s\S]*\])\s*```/);
-          if (jsonMatch) {
-            recs = JSON.parse(jsonMatch[1]!);
-          } else {
-            throw new Error("Failed to parse Groq JSON");
-          }
-        }
-        if (!Array.isArray(recs) || recs.length < 3) throw new Error("Invalid recs");
-
-        // Upsert or create books by title+author
-        const created: Array<{ id: string; title: string; authors: string }> = [];
-        for (const r of recs.slice(0, 3)) {
-          const title = r.title?.trim();
-          const author = r.author?.trim();
-          if (!title || !author) continue;
-          
-          // Try to fetch cover image
-          let coverImageUrl: string | null = null;
-          try {
-            const searchParams = new URLSearchParams({
-              title: title,
-              author: author,
-            });
-            const searchUrl = `https://openlibrary.org/search.json?${searchParams.toString()}`;
-            const searchResponse = await fetch(searchUrl, {
-              headers: {
-                "User-Agent": "Bookclub App",
-              },
-            });
-
-            if (searchResponse.ok) {
-              const searchData = (await searchResponse.json()) as {
-                numFound: number;
-                docs: Array<{ cover_i?: number }>;
-              };
-              if (searchData.numFound > 0 && searchData.docs[0]?.cover_i) {
-                coverImageUrl = `https://covers.openlibrary.org/b/id/${searchData.docs[0].cover_i}-M.jpg`;
-              }
-            }
-          } catch (error) {
-            // Silently fail - we'll just use emoji placeholder
-            console.error("Error fetching cover:", error);
-          }
-          
-          const existing = await ctx.db.book.findFirst({ where: { title, authors: author } });
-          const book =
-            existing
-              ? await ctx.db.book.update({
-                  where: { id: existing.id },
-                  data: { coverImageUrl: coverImageUrl ?? existing.coverImageUrl },
-                })
-              : await ctx.db.book.create({ data: { title, authors: author, coverImageUrl } });
-          created.push({ id: book.id, title: book.title, authors: book.authors });
-        }
-        if (created.length === 3) {
-          books = created;
-        }
-      } catch (err) {
-        // fallback to fixed stubs if Groq not configured or fails
-        const samples = [
-          { title: "The Great Gatsby", authors: "F. Scott Fitzgerald", coverImageUrl: "https://covers.openlibrary.org/b/id/7222246-M.jpg" },
-          { title: "Pride and Prejudice", authors: "Jane Austen", coverImageUrl: "https://covers.openlibrary.org/b/id/8091016-M.jpg" },
-          { title: "1984", authors: "George Orwell", coverImageUrl: "https://covers.openlibrary.org/b/id/7222241-M.jpg" },
-        ];
-        const created: Array<{ id: string; title: string; authors: string }> = [];
-        for (const s of samples) {
-          const existing = await ctx.db.book.findFirst({ where: { title: s.title, authors: s.authors } });
-          const book =
-            existing
-              ? await ctx.db.book.update({
-                  where: { id: existing.id },
-                  data: { coverImageUrl: s.coverImageUrl ?? existing.coverImageUrl },
-                })
-              : await ctx.db.book.create({ data: { title: s.title, authors: s.authors, coverImageUrl: s.coverImageUrl } });
-          created.push({ id: book.id, title: book.title, authors: book.authors });
-        }
-        books = created;
+        return poll;
       }
 
-      const startsAt = now;
-      const endsAt = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-
-      const poll = await ctx.db.poll.create({
-        data: {
-          groupId: input.id,
-          createdByUserId: userId,
-          selectionType: "AI_GENERATED",
-          status: "ACTIVE",
-          startsAt,
-          endsAt,
-          choices: {
-            create: books.map((b) => ({ bookId: b.id, addedByUserId: userId })),
-          },
-        },
-        include: { choices: { include: { book: true } } },
-      });
-
-      return poll;
+      // Legacy Groq-title generation removed in favor of vector-based selection
     }),
 
   // Fetch active poll with aggregates; auto-close when done
